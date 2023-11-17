@@ -1,3 +1,4 @@
-from Data.Data_manager import Gestion_Data
+from Controller.Poke_presentator import Control_poke
 
-data_gestor=Gestion_Data()
+data=Control_poke()
+data.filtre_type("Fire")
