@@ -1,9 +1,8 @@
 from abc import ABC, abstractmethod
 
 class Filtre(ABC):
-
-    
-    def application_filtre(self,filtres):
+    @abstractmethod
+    def application_filtre(self,valeur_filtree):
         pass
 
 """""
@@ -20,7 +19,58 @@ Hacer cumplir la estructura: Al declarar FilterStrategy como una clase abstracta
                                 método apply_filter. Si una clase no lo hace, el intérprete 
                                 de Python generará un error en tiempo de ejecución.
                                 """
-class Type_filtre(Filtre):
+
+class Number(Filtre):
     def application_filtre(self, data, valeur_filtree):
-        print("ok")
-        return data[data["Type 1"]==valeur_filtree]
+        return data[data['Number'] == valeur_filtree]
+
+class Name(Filtre):
+    def application_filtre(self, data, valeur_filtree):
+        return data[data['Name'].str.lower() == valeur_filtree.lower()]
+
+class Type_1(Filtre):
+    def application_filtre(self, data, valeur_filtree):
+        return data[data['Type_1'].str.lower() == valeur_filtree.lower()]
+
+class Type_2(Filtre):
+    def application_filtre(self, data, valeur_filtree):
+        return data[data['Type_2'].str.lower() == valeur_filtree.lower()]
+
+class Total(Filtre):
+    def application_filtre(self, data, valeur_filtree):
+        return data[data['Total'] == valeur_filtree]
+
+class HP(Filtre):
+    def application_filtre(self, data, valeur_filtree):
+        return data[data['HP'] == valeur_filtree]
+    
+class Attack(Filtre):
+    def application_filtre(self, data, valeur_filtree):
+        return data[data['Attack'] == valeur_filtree]
+
+class Defense(Filtre):
+    def application_filtre(self, data, valeur_filtree):
+        return data[data['Defense'] == valeur_filtree]
+
+class Sp_Atk(Filtre):
+    def application_filtre(self, data, valeur_filtree):
+        return data[data['Sp_Atk'] == valeur_filtree]
+
+class Sp_Def(Filtre):
+    def application_filtre(self, data, valeur_filtree):
+        return data[data['Sp_Def'] == valeur_filtree]
+
+class Speed(Filtre):
+    def application_filtre(self, data, valeur_filtree):
+        return data[data['Speed'] == valeur_filtree]
+
+class Generation(Filtre):
+    def application_filtre(self, data, valeur_filtree):
+        return data[data['Generation'] == valeur_filtree]
+
+class Legendary(Filtre):
+    def application_filtre(self, data, valeur_filtree):
+        return data[data['Legendary'] == valeur_filtree]
+
+
+

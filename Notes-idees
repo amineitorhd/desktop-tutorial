@@ -17,3 +17,39 @@
     -utilizar OBSERVER para manejar eventos y actualizaiones et tiempo real
     -STRATEGY para permitir diferentes estartegias de filtrado
     -DECORATOR para interfaz gràfica.
+
+-Para los criterios:
+    -Promedio de Estadísticas Básicas (HP, Ataque, Defensa, Velocidad): Puedes calcular el promedio de las estadísticas básicas para obtener una medida general del rendimiento.
+    -  Velocidad Relativa (Speed en comparación con otros Pokémon): Puedes calcular la velocidad de un Pokémon en relación con la velocidad promedio de todos los Pokémon en tu Pokedex.
+
+    -Comparación de Estadísticas con la Media y Desviación Estándar:
+
+Filtrar Pokémon cuyas estadísticas estén por encima o por debajo de la media y desviación estándar de una estadística específica.
+Análisis de Tendencias a lo Largo de las Generaciones:
+
+Realizar un análisis de tendencias para ver cómo ciertas estadísticas han evolucionado a lo largo de las diferentes generaciones de Pokémon.
+Grupos de Pokémon Especializados:
+
+Crear grupos especializados de Pokémon basados en ciertos criterios, como Pokémon de ataque rápido, Pokémon defensivos, etc.
+Clasificación de Pokémon por Tasa de Evolución:
+
+Clasificar Pokémon según su tasa de evolución (cuántos niveles necesita para evolucionar) y su impacto en las estadísticas.
+Análisis de Tipos de Pokémon Más Comunes:
+
+Identificar y analizar los tipos de Pokémon más comunes en tu Pokedex.
+Evaluación de Combinaciones de Tipos:
+
+Analizar qué combinaciones de tipos son más efectivas en términos de estadísticas.
+Peso y Altura Relativos:
+
+Comparar el peso y la altura de los Pokémon en relación con la media de tu Pokedex.
+Eficiencia Energética:
+
+Crear un criterio que evalúe la eficiencia energética de un Pokémon, considerando sus estadísticas en relación con su coste de evolución.
+Relación de Estadísticas por Tipo:
+
+Analizar cómo varían las estadísticas en función del tipo de Pokémon.
+Puntuación General de Desempeño:
+
+Crear una puntuación general de desempeño para cada Pokémon en función de varias estadísticas ponderadas.
+Estas ideas deberían llevarte más allá de los simples filtros y permitirte realizar análisis más profundos y especializados en tu Pokedex. Puedes adaptar estas ideas según la cantidad de datos y la complejidad que desees alcanzar en tu proyecto.
