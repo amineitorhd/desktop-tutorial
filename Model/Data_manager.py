@@ -7,6 +7,15 @@ class Gestion_Data:
     def get_pokeData(self):
         return self.poke_data
     
-    def filtre_type(self,poke_type):
-        return self.poke_data[self.poke_data["Type 1"]==poke_type]
+    def get_data_filtrage(self):
+        Filtres={}
+        for filtre in self.poke_data.columns:
+            Filtres[filtre]=self.poke_data[filtre].unique().tolist()
+        return Filtres
         
+
+G=Gestion_Data()
+a=G.get_data_filtrage()
+for element in a:
+    print (a[element])
+

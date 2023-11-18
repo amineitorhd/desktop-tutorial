@@ -6,3 +6,14 @@
                 -extraire les gifs pour chaque pokemon
                 -nouvelle colonne: façon d'obtention du pokemon
     -recherche random
+    -statistiques et graphiques
+    -information plus détaillé sur chaque pokemon
+    -comparer des pokemons
+    -filtres dynamiques--> para no tener que volver a la pagina de inicio
+    -guardar favoritos
+
+-Combinar patherns de python:
+    -Utilizar MVC (hecho)
+    -utilizar OBSERVER para manejar eventos y actualizaiones et tiempo real
+    -STRATEGY para permitir diferentes estartegias de filtrado
+    -DECORATOR para interfaz gràfica.

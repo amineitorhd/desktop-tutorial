@@ -1,4 +1,4 @@
 from Controller.Poke_presentator import Control_poke
-
-data=Control_poke()
-data.filtre_type("Fire")
+from Filtre.Filtre_strategy import Filtre
+data=Control_poke(Filtre())
+data.application_filtre("Fire")
