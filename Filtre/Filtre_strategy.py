@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+
 class Filtre(ABC):
     @abstractmethod
     def application_filtre(self,valeur_filtree):
@@ -19,6 +20,10 @@ Hacer cumplir la estructura: Al declarar FilterStrategy como una clase abstracta
                                 método apply_filter. Si una clase no lo hace, el intérprete 
                                 de Python generará un error en tiempo de ejecución.
                                 """
+class Random(Filtre):
+    def application_filtre(self, data, valeur_filtree):
+        num_pokemons = int(valeur_filtree)
+        return data.sample(n=num_pokemons)
 
 class Number(Filtre):
     def application_filtre(self, data, valeur_filtree):

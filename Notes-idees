@@ -53,3 +53,13 @@ Puntuación General de Desempeño:
 
 Crear una puntuación general de desempeño para cada Pokémon en función de varias estadísticas ponderadas.
 Estas ideas deberían llevarte más allá de los simples filtros y permitirte realizar análisis más profundos y especializados en tu Pokedex. Puedes adaptar estas ideas según la cantidad de datos y la complejidad que desees alcanzar en tu proyecto.
+
+-Génération aléatoire de Pokémon : Si tu veux ajouter un aspect ludique, tu pourrais implémenter un générateur aléatoire de Pokémon pour créer des équipes aléatoires.
+
+-Comparaison de Pokémon : Ajoute la possibilité pour les utilisateurs de comparer les statistiques de deux Pokémon et de voir les différences.
+
+Système de sauvegarde et de chargement : Implémente un système qui permet aux utilisateurs de sauvegarder leurs équipes Pokémon ou leurs recherches spécifiques.
+
+Carte interactive : Crée une carte interactive pour visualiser les différents emplacements de Pokémon dans le monde Pokémon.
+
+Mode sombre : Ajoute un mode sombre pour améliorer l'expérience utilisateur, en particulier dans des environnements à faible luminosité.
