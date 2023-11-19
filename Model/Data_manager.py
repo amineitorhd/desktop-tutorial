@@ -10,7 +10,8 @@ class Gestion_Data:
     def get_data_filtrage(self):
         Filtres={}
         for filtre in self.poke_data.columns:
-            Filtres[filtre]=self.poke_data[filtre].unique().tolist()
+            if filtre not in ["Number", "Name"]:
+                Filtres[filtre]=self.poke_data[filtre].unique().tolist()
         return Filtres
     def test(self):
         print("ok")

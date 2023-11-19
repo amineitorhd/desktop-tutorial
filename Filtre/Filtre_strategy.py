@@ -27,11 +27,12 @@ class Random(Filtre):
 
 class Number(Filtre):
     def application_filtre(self, data, valeur_filtree):
-        return data[data['Number'] == valeur_filtree]
+        print(valeur_filtree)
+        return data[data['Number'] == int(valeur_filtree)]
 
 class Name(Filtre):
     def application_filtre(self, data, valeur_filtree):
-        return data[data['Name'].str.lower() == valeur_filtree.lower()]
+        return data[data['Name'].str.lower().str.contains(valeur_filtree.lower())]
 
 class Type_1(Filtre):
     def application_filtre(self, data, valeur_filtree):
