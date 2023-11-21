@@ -7,15 +7,16 @@ class Control_poke:
         self.DataBase= Gestion_Data()
         self.data=self.DataBase.get_pokeData()
         self.filtres=self.DataBase.get_data_filtrage()
-        liste_filtres_fonction=[]
+        
+        # liste_filtres_fonction=[]
         liste_filtres=[]
-        for filtre in self.filtres:
-            liste_filtres_fonction.append(filtre+'()')
-            liste_filtres.append(filtre)
+        # for filtre in self.filtres:
+        #     # liste_filtres_fonction.append(filtre+'()')
+        #     liste_filtres.append(filtre)
         
 
 
-        self.GUI=Fenetre_princiaple(liste_filtres)
+        self.GUI=Fenetre_princiaple(self.filtres)
         self.GUI.Gestion_recherche.set_command(self.cherche_par_nom_nombre)
         # self.GUI.setFiltres(liste_filtres)
         
@@ -31,17 +32,29 @@ class Control_poke:
 
     
     def cherche_par_nom_nombre(self,nom_numero):
+        
+        filtrage=list(self.filtres[1].items())
         if nom_numero.isdigit():
-            new_data=Number.application_filtre(Filtre,self.data,nom_numero)
+            Strategie=filtrage[0]
         else:
-            new_data=Name.application_filtre(Filtre,self.data,nom_numero)
+            Strategie=filtrage[1]
+        
+        print("ta strategie est",Strategie[0],Strategie[1])  #fonction de strat sur class strat
+        strategy=set_strategy(Strategie[0],Strategie[1],True)  #True pour dire qu'on traite les identifiants
+        new_data=strategy.application_filtre(Filtre,self.data,nom_numero)
 
-        if new_data.empty:
+        # if new_data is not None:
+        #     print(new_data)
+        # else:
+        #     print("ups")
+        #     print("your ups:   ", nom_numero)
+
+
+        if new_data is not None:
+            self.GUI.affiche_resultat(new_data)
+        else:
             print("ups")
-        else:
-            print(new_data)
-
-
+            print("your ups:   ", nom_numero)
 
         #     def cherche_par_filtre(self,nom_numero):
         # new_data=Number.application_filtre(Filtre,self.data,nom_numero)

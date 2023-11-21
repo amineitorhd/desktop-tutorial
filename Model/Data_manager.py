@@ -8,19 +8,31 @@ class Gestion_Data:
         return self.poke_data
     
     def get_data_filtrage(self):
-        Filtres={}
+        Filtres_valeurs_possibles={}
+        type_filtres={}
         for filtre in self.poke_data.columns:
-            if filtre not in ["Number", "Name"]:
-                Filtres[filtre]=self.poke_data[filtre].unique().tolist()
-        return Filtres
+        # if filtre not in ["Number", "Name"]:
+            Filtres_valeurs_possibles[filtre]=self.poke_data[filtre].unique().tolist()
+            if isinstance(Filtres_valeurs_possibles[filtre][0],int):
+                type_filtres[filtre]=True
+            else:
+                type_filtres[filtre]=False
+
+                # Filtres_valeurs_possibles
+        return Filtres_valeurs_possibles,type_filtres
+
     def test(self):
-        print("ok")
+        ok=self.get_data_filtrage()
+        print("tiens:")
+        print(ok)
         
 
 G=Gestion_Data()
 a=G.get_data_filtrage()
-li=['Gestion_Data()']
-for i in a:
-    li.append(i+"()")
-print(li)
-test=eval(li[0]).test()
+
+
+
+# for i in a:
+#     li.append(i+"()")
+# print(li)
+# test=eval(li[0]).test()

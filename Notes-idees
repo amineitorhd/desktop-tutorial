@@ -63,3 +63,5 @@ Système de sauvegarde et de chargement : Implémente un système qui permet aux
 Carte interactive : Crée une carte interactive pour visualiser les différents emplacements de Pokémon dans le monde Pokémon.
 
 Mode sombre : Ajoute un mode sombre pour améliorer l'expérience utilisateur, en particulier dans des environnements à faible luminosité.
+
+quand on declare notre input text on peut mettre une command de rattache
