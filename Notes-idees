@@ -1,3 +1,15 @@
+Filtre basé sur une condition : Par exemple, filtrer les Pokémon dont l’attaque est supérieure à un certain seuil ET dont la défense est inférieure à un certain seuil. C’est un type de filtre différent car il prend en compte deux attributs et une condition.
+
+Filtre basé sur une recherche textuelle : Par exemple, permettre à l’utilisateur de rechercher un mot ou une phrase dans la description du Pokémon. C’est différent des filtres précédents car il s’agit d’une recherche de texte libre.
+
+Filtre basé sur l’exclusion : Par exemple, exclure certains types de Pokémon. C’est différent car au lieu de sélectionner des Pokémon qui correspondent à un certain critère, vous excluez ceux qui correspondent à un certain critère.
+
+Filtre basé sur une plage : Par exemple, permettre à l’utilisateur de filtrer les Pokémon en fonction d’une plage de valeurs pour un certain attribut, comme la hauteur ou le poids. C’est différent des filtres précédents car il ne s’agit pas d’une valeur unique, mais d’une plage de valeurs.
+
+regrouper tous les Pokémon par type - donc tous les Pokémon de type feu seraient ensemble, tous les Pokémon de type eau seraient ensemble, etc.
+
+
+
 
 -Idées
     -Afficher avec un clic la description des attribut

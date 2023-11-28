@@ -7,7 +7,7 @@ from functools import partial
 
 
 
-fichier=pds.read_csv("pokemon.csv",index_col="#")   #pour lire le fichier en DataFrame
+fichier=pds.read_csv("Laurine_data_manager/pokemon.csv",index_col="#")   #pour lire le fichier en DataFrame
 
 
 #interface graphique

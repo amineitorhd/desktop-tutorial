@@ -24,7 +24,7 @@ Hacer cumplir la estructura: Al declarar FilterStrategy como una clase abstracta
 def set_strategy(filtre,test_numerique,identificator):
     class strategy_filtrage(Filtre):
         def application_filtre(self,data,valeur_filtree):
-            if test_numerique:
+            if test_numerique[0]:
                 if identificator:
                     return data[data[filtre].astype(str).str.startswith(str(valeur_filtree))]
                 else:
@@ -42,61 +42,3 @@ class Random(Filtre):
     def application_filtre(self, data, valeur_filtree):
         num_pokemons = int(valeur_filtree)
         return data.sample(n=num_pokemons)
-
-
-
-class Number(Filtre):
-    def application_filtre(self, data, valeur_filtree):
-        print(valeur_filtree)
-        return data[data['Number'] == int(valeur_filtree)]
-
-class Name(Filtre):
-    def application_filtre(self, data, valeur_filtree):
-        return data[data['Name'].str.lower().str.contains(valeur_filtree.lower())]
-
-class Type_1(Filtre):
-    def application_filtre(self, data, valeur_filtree):
-        return data[data['Type_1'].str.lower() == valeur_filtree.lower()]
-
-class Type_2(Filtre):
-    def application_filtre(self, data, valeur_filtree):
-        return data[data['Type_2'].str.lower() == valeur_filtree.lower()]
-
-class Total(Filtre):
-    def application_filtre(self, data, valeur_filtree):
-        return data[data['Total'] == int(valeur_filtree)]
-
-class HP(Filtre):
-    def application_filtre(self, data, valeur_filtree):
-        return data[data['HP'] == int(valeur_filtree)]
-    
-class Attack(Filtre):
-    def application_filtre(self, data, valeur_filtree):
-        return data[data['Attack'] == int(valeur_filtree)]
-
-class Defense(Filtre):
-    def application_filtre(self, data, valeur_filtree):
-        return data[data['Defense'] == int(valeur_filtree)]
-
-class Sp_Atk(Filtre):
-    def application_filtre(self, data, valeur_filtree):
-        return data[data['Sp_Atk'] == int(valeur_filtree)]
-
-class Sp_Def(Filtre):
-    def application_filtre(self, data, valeur_filtree):
-        return data[data['Sp_Def'] == int(valeur_filtree)]
-
-class Speed(Filtre):
-    def application_filtre(self, data, valeur_filtree):
-        return data[data['Speed'] == int(valeur_filtree)]
-
-class Generation(Filtre):
-    def application_filtre(self, data, valeur_filtree):
-        return data[data['Generation'] == int(valeur_filtree)]
-
-class Legendary(Filtre):
-    def application_filtre(self, data, valeur_filtree):
-        return data[data['Legendary'] == int(valeur_filtree)]
-
-
-

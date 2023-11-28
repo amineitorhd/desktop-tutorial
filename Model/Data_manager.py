@@ -13,12 +13,21 @@ class Gestion_Data:
         for filtre in self.poke_data.columns:
         # if filtre not in ["Number", "Name"]:
             Filtres_valeurs_possibles[filtre]=self.poke_data[filtre].unique().tolist()
+            
             if isinstance(Filtres_valeurs_possibles[filtre][0],int):
-                type_filtres[filtre]=True
+                if len(Filtres_valeurs_possibles[filtre])<=220:
+                    type_filtres[filtre]=True,False    
+                else:
+                    type_filtres[filtre]=True,True
             else:
-                type_filtres[filtre]=False
+                type_filtres[filtre]=False,True
 
                 # Filtres_valeurs_possibles
+        '''
+########################################################################################
+########## print(type_filtres)   #¿¿¿¿¿¿¿¿¿¿¿Il print deux fois????????  ################
+########################################################################################
+        '''
         return Filtres_valeurs_possibles,type_filtres
 
     def test(self):

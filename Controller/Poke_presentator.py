@@ -1,5 +1,5 @@
 from Model.Data_manager import Gestion_Data
-from View.pok_GUI import Fenetre_princiaple
+from View.pok_GUI_v3_1 import GUI
 from Filtre.Filtre_strategy import *
 
 class Control_poke:
@@ -8,31 +8,17 @@ class Control_poke:
         self.data=self.DataBase.get_pokeData()
         self.filtres=self.DataBase.get_data_filtrage()
         
-        # liste_filtres_fonction=[]
-        liste_filtres=[]
-        # for filtre in self.filtres:
-        #     # liste_filtres_fonction.append(filtre+'()')
-        #     liste_filtres.append(filtre)
-        
-
-
-        self.GUI=Fenetre_princiaple(self.filtres)
-        self.GUI.Gestion_recherche.set_command(self.cherche_par_nom_nombre)
-        # self.GUI.setFiltres(liste_filtres)
-        
-        self.GUI.lanceur()
-
-        
+        self.GUI_poke=GUI(self.filtres)
+        self.GUI_poke.Frame_affichage.initialisation(self.data.iloc[:, :3])
+        self.GUI_poke.Frame_filtrage.set_command(self.cherche_par_nom_nombre)
 
 
 
-    def set_strategie_filtrage(self, strategie_filtrage:Filtre):
-        resultat=strategie_filtrage.application_filtre(self.data)
-        print(resultat)
-
+        self.GUI_poke.letsgoooo()
     
+
     def cherche_par_nom_nombre(self,nom_numero):
-        
+        print("hiiiii")
         filtrage=list(self.filtres[1].items())
         if nom_numero.isdigit():
             Strategie=filtrage[0]
@@ -43,19 +29,9 @@ class Control_poke:
         strategy=set_strategy(Strategie[0],Strategie[1],True)  #True pour dire qu'on traite les identifiants
         new_data=strategy.application_filtre(Filtre,self.data,nom_numero)
 
-        # if new_data is not None:
-        #     print(new_data)
-        # else:
-        #     print("ups")
-        #     print("your ups:   ", nom_numero)
-
-
         if new_data is not None:
-            self.GUI.affiche_resultat(new_data)
+            principal_info_new_data = new_data.iloc[:, :3]
+            self.GUI_poke.Frame_affichage.affichage_resultat_filtrage(principal_info_new_data)
         else:
             print("ups")
             print("your ups:   ", nom_numero)
-
-        #     def cherche_par_filtre(self,nom_numero):
-        # new_data=Number.application_filtre(Filtre,self.data,nom_numero)
-        # print(new_data)
