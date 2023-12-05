@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
+import threading
+import time
 
 class GUI(tk.Tk):
     def __init__(self):
@@ -88,8 +90,13 @@ class GUI(tk.Tk):
 
 
     def affichage_info_complete_pok(self,pokemon):
-        poke_info_window=Poke_Details_Window(pokemon[1])
-        # poke_info_window.demarage()
+        poke_info_window=Poke_Details_Window(pokemon[1],"View/pikachu-running.gif","Model/Characters_image/25-belle.png")
+        
+        # Si on ferme le window, on indique d'arrêter lethred
+        poke_info_window.protocol("WM_DELETE_WINDOW", poke_info_window.fermer_and_stop_thread)
+        
+        threading.Thread(target=poke_info_window.configuration_gif).start()  #On le traite à part pour pas perturber le fonctionnement de notre GUI.
+
 
     def demarage(self):
         self.mainloop()
@@ -240,6 +247,7 @@ class Frame_Recherche_simple(ttk.Frame):
         self.boutton_recherche.invoke()  #Une nouvelle fonction car bind nous donne des arguments qu'on veut pas
         self.pack=True
 
+
     def selection(self,event):
         for pokemon in self.resultats_tempsreel.selection():
             a=self.resultats_tempsreel.item(pokemon)
@@ -272,8 +280,8 @@ class Frame_Recherche_simple(ttk.Frame):
         if x<int(event.x)<x_2 and y<int(event.y)<y_2:
             print("ok")
 
-    #On reçoit la commande du boutton du Controller
-    def set_command(self,command):
+    
+    def set_command(self,command):#On reçoit la commande du boutton du Controller
         self.boutton_recherche["command"]= lambda: command(self.entree_nm_nb.get(),
                                                            self.pack) #Initialisé à True!   
 
@@ -447,20 +455,81 @@ class Frame_dynamique_filtres(ttk.Frame):
 
 
 class Poke_Details_Window(tk.Toplevel): #On crée une autre fenêtre qui n'interfere pas notre fenêtre principale 
-    def __init__(self,nom_pokemon):
+    def __init__(self,nom_pokemon,direction_gif,direction_image=None):
         super().__init__()
+        
+        self.thread_en_marche=True #Controle du Thread
+
         self.title(f"Info of {nom_pokemon} ")
         #Initialisation taille du pokedex_GUI
         ecran_largeur = self.winfo_screenwidth()
         ecran_longeur = self.winfo_screenheight()
         self.geometry(f"{ecran_largeur-(ecran_largeur//2)}x{ecran_longeur-(ecran_longeur//2)}")
+        self.size #Juste pour actualiser les info sur la taille de la fenêtre
+                    #Car en t=0 début tkinter fournies les relatives puis après en pixel
+        self.largeur_fenetre = self.winfo_screenwidth()
+        self.hauteur_fenetre = self.winfo_screenheight()
+        
         self.minsize(500,300)
-
-        self.ecran=Image.open("View/template.png")
+        
+        self.ecran=Image.open("View/pokemon__template_no_evolution_by_trueform_d3hs6u9.png")
 
         self.details_ecran=Fond_Ecran(self,self.ecran,"red",False)
         self.details_ecran.pack(fill="both",expand=1)
+        self.direction_gif=direction_gif
+        self.direction_image=direction_image
+        self.afficher_image()
 
+    
+    def configuration_gif(self,width_rel=0.5, height_rel=0.25):
+        gif_pokemon = Image.open(self.direction_gif)
+        self.gif_frames = []
+        
+
+        gif_largeur = int(self.largeur_fenetre * width_rel)
+        gif_hauteur = int(self.hauteur_fenetre * height_rel)
+        for frame in range(gif_pokemon.n_frames):
+            gif_pokemon.seek(frame)
+            frame_photo = ImageTk.PhotoImage(gif_pokemon.copy().resize((gif_largeur,gif_hauteur)))
+            self.gif_frames.append(frame_photo)
+        self.delai_frames_gif = gif_pokemon.info["duration"]
+        self.afficher_gif(0)
+
+
+    def afficher_gif(self, compteur_frames_gif, pos_x_rel=0.25, pos_y_rel=0.25):
+        if self.thread_en_marche:
+            frame = self.gif_frames[compteur_frames_gif]
+            canvas_width = self.details_ecran.winfo_width()
+            canvas_height = self.details_ecran.winfo_height()
+            pos_x = int(canvas_width * pos_x_rel)
+            pos_y = int(canvas_height * pos_y_rel)
+            
+            if compteur_frames_gif == 0:
+                self.image_on_canvas = self.details_ecran.create_image(pos_x, pos_y, image=frame, anchor='center')
+            else:
+                self.details_ecran.itemconfig(self.image_on_canvas, image=frame)
+            
+            compteur_frames_gif = (compteur_frames_gif + 1) % len(self.gif_frames)
+            self.after(self.delai_frames_gif, self.afficher_gif, compteur_frames_gif, pos_x_rel, pos_y_rel)
+
+
+    def afficher_image(self,largeur_rel=0.25,hauteur_rel=0.25,x_rel=0.50,y_rel=0.45):
+        self.image_pokemon=Image.open(self.direction_image)
+        image_largeur = int(self.largeur_fenetre * largeur_rel)
+        image_hauteur = int(self.hauteur_fenetre * hauteur_rel)
+        pos_x = int(self.largeur_fenetre * x_rel)
+        pos_y = int(self.hauteur_fenetre * y_rel)
+
+        print("\n config de ton window:",self.largeur_fenetre,self.hauteur_fenetre)
+        print("\n config de ton image:",image_largeur,image_hauteur)
+        print("\n config de ton image:",pos_x,pos_y,"\n")
+        self.image_pokemon_tk=ImageTk.PhotoImage(self.image_pokemon.resize((image_largeur,image_hauteur)))
+        self.details_ecran.create_image(pos_x,pos_y,image=self.image_pokemon_tk,anchor="center")
+        
+
+    def fermer_and_stop_thread(self):
+        self.thread_en_marche=False #Controle du Thread
+        self.destroy()
 
 
 
