@@ -1,12 +1,15 @@
 import pandas as pd
 import numpy as np
-from os import walk
-
+from PIL import Image, ImageTk
+import os
+import re
 
 class Gestion_Data:
     def __init__(self):
-        self.poke_data=pd.read_csv("Model\pokemon.csv")
-        
+        self.poke_data=pd.read_csv("Model/pokemon.csv")
+        # self.poke_data = self.poke_data.fillna('') #On remplace tous les nan par des 
+        # self.conversion_Name_Number={row[1].replace("♀", "_f").replace("♂", "_m").replace("'", "").replace(":", "").replace(" ", "_").replace(".", "").replace("-", "").lower(): row[0] for _, row in self.poke_data.iterrows()}
+
     def get_pokeData(self):
         return self.poke_data
     
@@ -56,34 +59,64 @@ class Gestion_Data:
         print("tiens:")
         print(ok)
         
-    def data_image(self,direction_image,direction_gif):
-        image_gif=[]
-        image_gif_direction_codifie={}
-        for direction in (direction_image,direction_gif):
-            for _,__, image_data in walk(direction):
-                image_gif.append(image_data)
+    def get_data_image(self):
+        image_gif={}
+        image_png={}
         
-        dic_image={}
-        for image in image_gif[0]:
-            parties=image.split("-")
-            id=parties[0]
-            mega="mega" in parties
-            X= "x" in parties
-            Y= "y" in parties
-            dic_image[id]={"Mega":mega, "X":X, "Y":Y}
+        for poke_gif in os.listdir("Model/GIF"):
+            nom=(re.split('-|\.', poke_gif)[0]).lower()
+            if nom=="mr":
+                print((re.split('-', poke_gif)[0]).lower())
+            # Manejar formas alternativas de Pokémon
+            # if '_f' in nom:
+            #     nom = nom.replace('_f', '♀').strip()
+            #     print("\n")
+            #     print(nom)
+            
+            if nom in self.conversion_Name_Number:
+                # print("yes")
+                nombre=self.conversion_Name_Number[nom]
+
+                if nombre not in image_gif:
+                    # print("ok")
+                    image_gif[nombre]="Model/GIF"+"/"+poke_gif
+            else:
+                pass
+                # print(nom,"ok")
+        c=0
+        for i in range (721):
+            if i not in image_gif:
+                c+=1
+                if i>0 and i<721:
+                    a=self.poke_data.loc[self.poke_data['Number'] == i, 'Name'].values[0]
+                    print(f"on a un probleme avec{i}: {a}")
+                else:
+                    print(f"on a un probleme avec{i}")
+        print("total:",c)
+
+        for poke_photo in os.listdir("Model/Characters_image"):    
+            # Obtener el número del Pokémon del nombre del archivo
+            nmb = poke_photo.split('.')[0]
+
+            # Agregar al diccionario
+            image_png[nmb] = "Model/Characters_image"+"/"+poke_photo
+        return image_png
+            
+
+        print(image_png)
+        # print(image_gif)
+                
         
-        print(len(dic_image))
 
                 
 
 # G=Gestion_Data()
 # a=G.get_data_filtrage()
-# b=list(a.items())
-# print(b[0][0],b[0][1][0])
-
+# print(G.conversion_Name_Number)
+# G.get_data_image()
 # G.data_image("Model/Characters_image","Model/GIF")
-
-
+# a="Amine._AmineE"
+# print(a.lower())
 
 # for i in a:
 #     li.append(i+"()")

@@ -23,6 +23,7 @@ regrouper tous les Pokémon par type - donc tous les Pokémon de type feu seraie
     -comparer des pokemons
     -filtres dynamiques--> para no tener que volver a la pagina de inicio
     -guardar favoritos
+    -filtres par groupe (pokemons feu : on regarde hp....)
 
 -Combinar patherns de python:
     -Utilizar MVC (hecho)

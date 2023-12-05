@@ -22,9 +22,9 @@ Hacer cumplir la estructura: Al declarar FilterStrategy como una clase abstracta
                                 """
 
 def set_strategy(filtre,test_numerique,Type):
-    print("filtre:",filtre)
-    print("test numerique:",test_numerique)
-    print(f"Type:{Type}:{type(Type)}")
+    # print("filtre:",filtre)
+    # print("test numerique:",test_numerique)
+    # print(f"Type:{Type}:{type(Type)}")
     class strategy_filtrage(Filtre):
         def application_filtre(self,data,valeur_filtree):
             if test_numerique:

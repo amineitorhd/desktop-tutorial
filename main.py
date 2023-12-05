@@ -1,14 +1,7 @@
-from Controller.Poke_presentator import Control_poke
+from Controller.Poke_presentator_v2_0 import Control_poke
 
-data=Control_poke()
+data_direction="Model/pokemon.csv"
 
-# a="type"
-# print(type(a))
+data=Control_poke(data_direction)
 
-# def _(x):
-#     if x=="type":
-#         print("ok")
-#     else:
-#         print("No")
 
-# _("type")
