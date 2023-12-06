@@ -24,8 +24,11 @@ class GUI(tk.Tk):
         self.ecran_actuel=self.ecran  #Variable qui va permettre de switch les ecrans
 
         #Initialisation du fond d'ecran 
-        self.fond_ecran=Fond_Ecran(self,self.ecran,"red",True)
+        region_scroll=(0,0,ecran_largeur,ecran_longeur)
+        self.fond_ecran=Fond_Ecran(self,self.ecran,"red",True,region_de_scroll=region_scroll)
         self.fond_ecran.pack(expand=True,fill="both")
+
+
 
 
         self.filtres_avancee=Frame_dynamique_filtres(self,1.5,0.35,0.0502,True,0.4,0.80,2,teleport=(True,0.95))
@@ -34,16 +37,21 @@ class GUI(tk.Tk):
                                               command=lambda:self.filtres_avancee.animation(self.boutton_filtres_avancee))
         self.boutton_filtres_avancee.place(relx=0.0502,rely=0.95,relwidth=0.4)
 
-#Initialisation des réglages du Pokedex_GUI
-        self.configuration=Frame_dynamique_configuration(self,-0.4,0.035,0.50,False,0.4,0.2,5)
-        self.config_configuration()
-        
-
 #Ordre d'initialisation important!!!
         #Initialisation de la barre de recherche
         self.zone_recherche=Frame_Recherche_simple(self,size=ecran_longeur//60)
         self.zone_recherche.place(relx=0.005,relwidth=0.4,y=0)
 
+        #Initialisation des réglages du Pokedex_GUI
+        self.configuration=Frame_dynamique_configuration(self,-0.4,0.035,0.50,False,0.4,0.2,5)
+        self.config_configuration()
+
+        #Initialisation des affichages graphiques des pokemons
+        # self.affichage_pokemons=Frame_Affichage_Pokemons(self) #Frame_Affichage_Pokemons(self)
+        # self.bind("<Configure>",self.gestion_fenetre)
+        # self.fond_ecran.bind_all('<MouseWheel>',lambda event: self.fond_ecran.yview_scroll(-int(event.delta/60),"units"))
+
+        self.affichage_cartes_pokemons=Frame_poke_affichage_v2(self,self.ecran)
 
     def config_configuration(self):
         self.image_configuration=Image.open("View/Back1.jpeg")
@@ -58,6 +66,9 @@ class GUI(tk.Tk):
         boutton_obscur=ttk.Button(self.fond_ecran_configuration,text="Obscure Mode",
                                 command=self.actualisation_mode_obscur).pack(side="top",anchor="nw")
             
+    def gestion_fenetre(self,event):
+        self.fond_ecran.create_window(((self.winfo_width()//2)*0.95,0),window=self.affichage_pokemons,
+                                      anchor="nw",width=(self.winfo_width()//2*1.0499))
 
     def actualisation_mode_obscur(self):
         if self.ecran_actuel==self.ecran:
@@ -84,14 +95,11 @@ class GUI(tk.Tk):
         print(f"tu veux plus d'info de: {pokemon}")
 
 
-    def recup_data_apres_filtrage(self,data):
-        print("Je suis GUI et j'ai reçue le résultat du Controller\n")
-        print(data,type(data))
-
-
     def affichage_info_complete_pok(self,pokemon):
-        poke_info_window=Poke_Details_Window(pokemon[1],"View/pikachu-running.gif","Model/Characters_image/25-belle.png")
-        
+        nom=pokemon.iloc[1]
+        poke_info_window=Poke_Details_Window(nom,"Model/GIF/pikachu-5.gif","Model/Characters_image/25-belle.png")
+        for info in pokemon:
+            ttk.Label(poke_info_window,text=f"{info}").pack(side="right")
         # Si on ferme le window, on indique d'arrêter lethred
         poke_info_window.protocol("WM_DELETE_WINDOW", poke_info_window.fermer_and_stop_thread)
         
@@ -101,11 +109,121 @@ class GUI(tk.Tk):
     def demarage(self):
         self.mainloop()
 
+
+class Frame_poke_affichage_v2(ttk.Frame):
+    def __init__(self,mere,fond_ecran):
+        super().__init__(mere)
+        self.pokemons_affiches=30
+        self.dico_pokemon_carte={}
+        self.poke_cartes_affichees=[]
+
+
+        self.place(relx=0.5,rely=0.005,relwidth=0.48,relheight=1)
+        self.canvas=tk.Canvas(self,bg="magenta",scrollregion=(0,0,self.winfo_width(),self.pokemons_affiches*330))
+        self.canvas.pack(fill="both",expand=1)
+        
+        self.frame=ttk.Frame(self)
+        self.boutton_afficher_plus=ttk.Button(self.frame,text="Afficher plus")
+        # self.fond_ecran=Fond_Ecran(self.frame,fond_ecran,expand_ecran=True,region_de_scroll=(0,0,500,800))
+        # self.fond_ecran.pack(fill="both",expand=1)
+
+        
+
+        self.scroll_bar=ttk.Scrollbar(self,orient="vertical",command=self.canvas.yview)
+        self.canvas.configure(yscrollcommand=self.scroll_bar.set)
+        self.scroll_bar.place(relx=1,rely=0,relheight=1,anchor="ne")
+        self.canvas.bind_all("<MouseWheel>",lambda event: self.canvas.yview_scroll(-int(event.delta/60),"units"))
+        self.bind("<Configure>",self.configuration_affichage)
+
+    def affichage_poke_liste(self,poke_nom_data,initialisation=False):
+        # for carte in self.poke_cartes_affichees:
+        #     carte.pack_forget()
+        if not initialisation:
+            self.boutton_afficher_plus.pack_forget()
+            self.pokemons_affiches+=30
+            self.configuration_affichage(None)
+
+        for poke_nom in poke_nom_data:
+            carte=self.dico_pokemon_carte[poke_nom][0]
+            carte.pack(fill="both",padx=(0,15))
+            self.poke_cartes_affichees.append(carte)
+        self.boutton_afficher_plus.pack(fill="both",expand=1)
+
+
+    def configuration_affichage(self,_):
+        if self.pokemons_affiches*330>=self.winfo_height():
+            hauteur_fenetre_scroll=self.pokemons_affiches*330
+            self.canvas.bind_all("<MouseWheel>",lambda event: self.canvas.yview_scroll(-int(event.delta/60),"units"))
+            self.scroll_bar.place(relx=1,rely=0,relheight=1,anchor="ne")
+
+        else:
+            hauteur_fenetre_scroll=self.winfo_height()
+            self.canvas.unbind_all("<MouseWheel>")
+            self.scroll_bar.place_forget()
+
+        self.canvas.config(scrollregion=(0,0,self.winfo_width(),hauteur_fenetre_scroll))
+        self.canvas.create_window((0,0),window=self.frame,
+                            width=self.winfo_width(),
+                            height=hauteur_fenetre_scroll,
+                            anchor="nw")
+
+    def creation_poke_carte(self, nom, numero,image_tk=None):
+        self.carte_pokemon = ttk.Frame(self.frame)
+  
+        
+        self.fond_carte_pokemon = tk.Canvas(self.carte_pokemon, bg="#2992B0")
+        self.fond_carte_pokemon.pack(fill="both",expand=True)
+        self.fond_carte_pokemon.rowconfigure((0,1,2),weight=2,uniform="a")
+        self.fond_carte_pokemon.rowconfigure((3),weight=1)
+        self.fond_carte_pokemon.columnconfigure((0,1,2),weight=2,uniform="a")
+        self.fond_carte_pokemon.columnconfigure((4,5,6,7),weight=1,uniform="a")
+
+        # Canvas où il y aura limage du  Pokemon
+        self.canvas_pokemon = tk.Canvas(self.fond_carte_pokemon, bg="black")
+        if image_tk is not None:
+            self.canvas_pokemon.create_image(40,40,image=image_tk,anchor="center")
+            self.carte_pokemon.image_tk = image_tk #On le garde en instance pour pas qu'il se fasse elim
+        self.canvas_pokemon.grid(row=0,rowspan=4,column=0,columnspan=2,sticky="nsew")
+
+
+        # Labels pour nom et numero
+        label_pokemon_nom = ttk.Label(self.fond_carte_pokemon, text=f"{nom}",font=("Helvetica",20),background="red")
+        label_pokemon_nom.grid(row=0,rowspan=2,column=2,columnspan=2,sticky="ew")
+
+        label_pokemon_numero = ttk.Label(self.fond_carte_pokemon, text=f"#{numero}")
+        label_pokemon_numero.grid(row=2,rowspan=1,column=2,columnspan=1,sticky="nsw")
+
+
+        # Canvas où il yaura les types de pkemon (en icone)
+        canvas_type1 = tk.Canvas(self.fond_carte_pokemon, bg="green")
+        canvas_type1.grid(row=3,column=6,columnspan=1,sticky="s")
+
+        canvas_type2 = tk.Canvas(self.fond_carte_pokemon, bg="yellow")
+        canvas_type2.grid(row=3,column=7,columnspan=1,sticky="s")
+
+        return self.carte_pokemon,self.canvas_pokemon
+
+
+    def initialisation_cartes_pokemons(self,data_pokemons):
+        print("initialisation cartes:")
+        for index,pokemon_info in data_pokemons.iterrows():
+            poke_nom=pokemon_info.iloc[1]
+            poke_numero=pokemon_info.iloc[0]
+            pokemon_carte=self.creation_poke_carte(poke_nom,poke_numero)
+            self.dico_pokemon_carte[poke_nom]=pokemon_carte
+        print("fin initialisation")
+
+
+    def bout_set_command(self,command):
+        self.boutton_afficher_plus["command"]=command
+
+
+
 #Création objet Canvas pour gerer l'affichage du fond d'ecran
 #Aussi pour gerer les regions de scroll possibles
 class Fond_Ecran(tk.Canvas):
-    def __init__(self,mere,ecran,fond="magenta",expand_ecran=False):
-        super().__init__(mere,bg=fond)
+    def __init__(self,mere,ecran,fond="magenta",expand_ecran=False,affichage_pokemon=None,region_de_scroll=(0,0,500,900)):
+        super().__init__(mere,bg=fond,scrollregion=region_de_scroll)
         self.image_fond_ecran=ecran
 
         #Si il faut afficher plus de pokemons, il faut agrandir la fenêtre
@@ -113,10 +231,12 @@ class Fond_Ecran(tk.Canvas):
 
         #Si le canvas change de taille (<=> si fenetre change de taille (car canvas occupant toute la fenêtre))
         self.bind('<Configure>', self.config_fond_ecran)
+        self.affichage_pokemon=affichage_pokemon
+        #attribut affichage_pokemon: On l'utilise que pour notre fenêtre top_level
 
 
     def config_fond_ecran(self,event=None,numb_pokemons=40): #valeur arbitraire (numb de pokemons par ecran)
-        #On utilise pas l'argument event fournie par "bind"
+        #On utilise pas l'argument event fournie par "bind"    
         
         #On va ajuster le fond d'ecran selon la taille de la fenêtre
         largeur=self.winfo_width()
@@ -142,18 +262,27 @@ class Fond_Ecran(tk.Canvas):
                           image=self.ecran_actualisee_tk,
                           anchor="center")
         
-        if self.expandir_ecran:
-            num_lignes=int(numb_pokemons//7) #Calculs arbitraires
-            num_colonnes=int(largeur//1024)+1
+        # if self.expandir_ecran:
+        #     num_lignes=int(numb_pokemons//7) #Calculs arbitraires
 
-            #On prefère cree une image en dessous l'autre pour garder la visibilité
-            #Au lieu de redimensioner l'hauteur
-            for i in range(num_lignes):
-                self.create_image(0,i*x, image=self.ecran_actualisee_tk, anchor="nw")
+        #     #On prefère cree une image en dessous l'autre pour garder la visibilité
+        #     #Au lieu de redimensioner l'hauteur
+        #     for i in range(num_lignes):
+        #         self.create_image(0,i*y, image=self.ecran_actualisee_tk, anchor="nw")
             
-            #On ajuste le scroll_region à chaque actualisation de l'ecran.
-            self.config(scrollregion=(0,0,largeur,num_lignes*x-750)) #750: choisie arbitrairement
+        #     #On ajuste le scroll_region à chaque actualisation de l'ecran.
+        #     self.config(scrollregion=(0,0,largeur,num_lignes*x-750)) #750: choisie arbitrairement
 
+        if self.affichage_pokemon is not None:
+            self.image_tk = ImageTk.PhotoImage(self.affichage_pokemon.resize((100,200)))
+
+            # Obtenir les dimensions du Canvas
+            largeur_canvas = self.winfo_width()
+            hauteur_canvas = self.winfo_height()
+
+            # Afficher l'image au centre du Canvas
+            self.create_image(largeur_canvas // 2, hauteur_canvas // 2, image=self.image_tk, anchor="center")
+    
 
     def switch_mode_ecran(self,ecran):
         self.image_fond_ecran=ecran #On change d'ecran
@@ -165,11 +294,6 @@ class Frame_Recherche_simple(ttk.Frame):
     def __init__(self,mere,size):
         super().__init__(mere)
         self.mere=mere
-        #On cree un style personalisée pour nos bouttons
-        style = ttk.Style()
-        style.configure('TButton', font=('Helvetica', size-3))
-
-
 
         #Initialisation de la barre de recherche
         self.nom_nombre=tk.StringVar()  #Variable des entrees
@@ -185,74 +309,61 @@ class Frame_Recherche_simple(ttk.Frame):
 
         #Boutton pour chercher les résultats
         self.afficher_frames=True #Booleen permettant de savoir si afficher les frames des pokemons ou pas
-        self.boutton_recherche=ttk.Button(mere,text="chercher!",style='TButton')
+        self.boutton_recherche=ttk.Button(mere,text="chercher!")
         self.boutton_recherche.place(relx=0.4*self.winfo_width(),y=0)
 
-        self.resultats_tempsreel=ttk.Treeview(self,columns=("Id_numero","Id_nom","Caract1","Caract2"),show="headings")  #""""Tableur tkinter"""""
+        self.resultats=ttk.Treeview(self,columns=("Id_numero","Id_nom","Caract1","Caract2"),show="headings")  #""""Tableur tkinter"""""
 
 
-        self.nom_nombre.trace("w", self.temps_reel)  #Bizare car obligé 3 arguments!
+        self.nom_nombre.trace("w", self.ecriture_actualisation)  #Bizare car obligé 3 arguments!
 
     def configuration_affichage_resultats(self,filtres_affiches):
         longeur_frame=self.winfo_width()
         longeur_par_colonne=longeur_frame//len(filtres_affiches)
-        self.resultats_tempsreel=ttk.Treeview(self,columns=("Id_nom","Id_numero","Caract1","Caract2"),show="headings")
+        self.resultats=ttk.Treeview(self,columns=("Id_nom","Id_numero","Caract1","Caract2"),show="headings")
         
         #On itère à la fois sur la liste des filtres et sur les colonnes de notre treeview
-        for filtre, col in zip(filtres_affiches, self.resultats_tempsreel["columns"]):
-            self.resultats_tempsreel.heading(col, text=filtre)  #On change les titres des colonnes
-            self.resultats_tempsreel.column(col,width=longeur_par_colonne)  #On met une largeur uniforme pour chaque colonne
+        for filtre, col in zip(filtres_affiches, self.resultats["columns"]):
+            self.resultats.heading(col, text=filtre)  #On change les titres des colonnes
+            self.resultats.column(col,width=longeur_par_colonne)  #On met une largeur uniforme pour chaque colonne
                                                                                 #On pourrait les personalisé....
-        self.resultats_tempsreel.bind('<Double-1>', self.selection)  # Si double click
-        self.resultats_tempsreel.bind('<Return>', self.selection)  # Ou si appuie sur enter
-
+        
 
     #On peut recevoir de la methode trace un nombre k d'arguments qu'on va pas utiliser.
-    def temps_reel(self,*args): 
+    def ecriture_actualisation(self,*args): 
         entree=self.entree_nm_nb.get()
-        self.resultats_tempsreel.delete(*self.resultats_tempsreel.get_children()) #Pour effacer les trucs d'avant
+        self.resultats.delete(*self.resultats.get_children()) #Pour effacer les trucs d'avant
 
         if entree!="" and entree!="Nom ou numéro Pokemon":
-            self.resultats_tempsreel.pack(fill="x")
-            nombre_elements = len(self.resultats_tempsreel.get_children())
+            self.resultats.pack(fill="x")
+            nombre_elements = len(self.resultats.get_children())
             # Configuration de la hauteur de la ListBox pour qu'elle corresponde au nombre d'éléments
             # if nombre_elements>7:
-            #     self.resultats_tempsreel.configure(height=100) #hateur max pouvant occuper!
+            #     self.resultats.configure(height=100) #hateur max pouvant occuper!
             # else:
-            #     self.resultats_tempsreel.configure(height=nombre_elements)
+            #     self.resultats.configure(height=nombre_elements)
 
             # self.afficher_frames=False
             # data=self.boutton_recherche.invoke() #Pourquoi tkniter convert un pandas df a un str???
             # self.afficher_frames=True
 
             # print(data)
-            # self.resultats_tempsreel.insert("","end",values=(entree,))
+            # self.resultats.insert("","end",values=(entree,))
             self.boutton_recherche.invoke()  #Pourquoi conversion en str!!!!
 
         else:
-            self.resultats_tempsreel.pack_forget()
+            self.resultats.pack_forget()
 
 
     def affichage_temps_reel(self,data_set):
-        print("\n\n\n\n\nJe suis GUI et j'ai reçu ça pour le treeview:\n\n\n\n\n")
-        i=0
-        for nb,nm,t1,t2 in data_set:
-
-            self.resultats_tempsreel.insert(parent="",index=i,values=(nb,nm,t1,t2))
-            i+=1
+        for index, (nb, nm, t1, t2) in enumerate(data_set):
+            self.resultats.insert(parent="", index=index, values=(nb, nm, t1, t2))
 
 
     def rechercher(self,event):
         self.pack=False
         self.boutton_recherche.invoke()  #Une nouvelle fonction car bind nous donne des arguments qu'on veut pas
         self.pack=True
-
-
-    def selection(self,event):
-        for pokemon in self.resultats_tempsreel.selection():
-            a=self.resultats_tempsreel.item(pokemon)
-            print(a["values"])
-            self.mere.affichage_info_complete_pok(a["values"])
 
     
     def effacer_texte(self,event): #Dans les deux cas on s'en sert pas du event fourni par Bind
@@ -284,10 +395,6 @@ class Frame_Recherche_simple(ttk.Frame):
     def set_command(self,command):#On reçoit la commande du boutton du Controller
         self.boutton_recherche["command"]= lambda: command(self.entree_nm_nb.get(),
                                                            self.pack) #Initialisé à True!   
-
-
-    def cambiar_tamaño_texto(self,new):
-        self.size=new
 
 
 #Frame personalisée représentant les configurations à la disposition de l'user
@@ -380,20 +487,20 @@ class Frame_dynamique_filtres(ttk.Frame):
             self.squirtel_actuel=self.squirtels
             self.cv=Fond_Ecran(self,self.squirtels)
             self.cv.pack(fill="both",expand=1)
-            print("Je suis GUI et j'ai reçue l'info de Controller:")
-            print(information[0])
+            # print("Je suis GUI et j'ai reçue l'info de Controller:")
+            # print(information[0],"\n\n")
             for cle,valeur in information[0].items():
                 if not (valeur[1]=="Id_Type"):
                     if valeur[1]=="Categorique_Type":
-                        print("\n")
-                        print(information[1][cle],len(information[1][cle]))
+                        # print("\n")
+                        # print(cle,information[1][cle],len(information[1][cle]))
                         ttk.Label(self.cv,text=cle).pack()
                         i=1
                         if not information[0][cle][0]:
                             for valeur_possible in information[1][cle]:
                                 if f"{valeur_possible}"!="nan":
                                     if i<7:
-                                        print(i)
+                                        # print(i)
                                         ttk.Button(self.cv,
                                                 text=f"{valeur_possible}").place(relx=0,rely=i*0.1)
                                     elif i<13:
@@ -406,6 +513,8 @@ class Frame_dynamique_filtres(ttk.Frame):
                                                 text=f"{valeur_possible}").place(relx=0.4,rely=a*0.1)
 
                                     i+=1
+                # else:
+                #     print("\n\n********",cle,information[1][cle],len(information[1][cle]),"\n\n********")
 
 
     def animation(self,boutton_filtres):
@@ -453,6 +562,104 @@ class Frame_dynamique_filtres(ttk.Frame):
             else:
                 self.invisible_GUI = True
 
+#Frame qui affiche tous les pokemons (graphiquement)
+class Frame_Affichage_Pokemons(ttk.Frame):
+    def __init__(self, mere):
+        super().__init__(mere)
+        self.dico_pokemons_cartes=[]
+        self.dico_image_cartes=[]
+        # tk.Canvas(self,bg="#2992B0").pack(fill="both",expand=1)
+        # self.fond_carte_pokemons=Fond_Ecran(self,Image.open("View/fond_ecran_pokedex.jpeg").resize((100,100)),
+        #            "#2992B0",True)
+        # self.fond_carte_pokemons.pack(fill="both",expand=1)
+        filas=tuple(range(803//3))
+        print("pokemons:","802","filas:",filas)
+        # self.rowconfigure(filas, weight=1, uniform="a")
+        self.columnconfigure((0,1,2),weight=1,uniform="a")
+        self.boutton_afficher_plus=ttk.Button(mere,text="Afficher_plus")
+        self.boutton_afficher_plus.pack(side="top")
+        self.cartes_pokemons_affichees=[]
+        # self.cargar_imagenes()
+    
+    def initialisation_cartes_pokemons(self,data_pokemons):
+        print("Initialisation pokecartes[")
+        for index,pokemon_info in data_pokemons.iterrows():
+            if index==0 or index==150 or index==250 or index==350 or index==450 or index==550 or index==650 or index==750 or index==800 or index==850:
+                print("*")
+            # self.pokemon_carte=self.poke_carte(pokemon_info[1],pokemon_info[0],
+                                            #    ImageTk.PhotoImage(Image.open("Model/Characters_image/25-phd.png").resize((100,200))))
+            nom=pokemon_info.iloc[1]
+            numero=pokemon_info.iloc[0]
+            self.pokemon_carte=self.poke_carte(nom,numero)
+            # self.dico_pokemons_cartes[nom,numero]=self.pokemon_carte[0]
+            self.dico_pokemons_cartes.append(((nom,numero),self.pokemon_carte[0]))
+            # self.dico_image_cartes[nom]=self.pokemon_carte[1]
+            self.dico_image_cartes.append((nom,self.pokemon_carte[1]))
+        print("]\n Fin initialisation")
+
+    def cargar_imagenes(self):
+        self.imagenes_pokemon = []
+        print("Initialisation pokecartes images[")
+        for i in range(1, 700):  # Suponiendo que tienes 151 Pokémon
+            if i==0 or i==150 or i==250 or i==350 or i==450 or i==550 or i==650 :
+                print("*")
+            self.imagen = ImageTk.PhotoImage(Image.open(f"Model/Characters_image/{i}.png").resize((100, 80)))
+            self.imagenes_pokemon.append(self.imagen)
+        self.images=self.imagenes_pokemon
+            
+    def affichage_30pokemon(self,pokemon_data,commpteur_pokemons):
+        
+
+        
+        for index, pokemon_info in pokemon_data.iterrows():
+            columna = index % 3  # Ahora hay tres columnas (0, 1, 2)
+            linea = index // 3 
+            # self.dico_image_cartes[pokemon_info[1]].create_image(90, 40, image=self.images[index], anchor="center")
+            # self.dico_image_cartes[index][1].create_image(90, 40, image=self.images[index], anchor="center")
+            # self.carte=self.dico_pokemons_cartes[pokemon_info[1], pokemon_info[0]]
+            self.carte=self.dico_pokemons_cartes[index][1]
+            self.carte.grid(row=linea, column=columna, padx=10, pady=10)
+            self.cartes_pokemons_affichees.append(self.carte)
+
+        
+    def set_command(self,command):
+        self.boutton_afficher_plus["command"]=command
+
+    #Fonction qui return un frame qui affiche des infos basique du pokemon
+    def poke_carte(self, nom, numero,image_tk=None):
+        self.carte_pokemon = ttk.Frame(self)
+        self.carte_pokemon.rowconfigure((0,1,2,3,4,5,6,7,8),weight=1,uniform="a")
+        self.carte_pokemon.columnconfigure((0,1,2,3,4),weight=1,uniform="a")
+        self.fond_carte_pokemon = tk.Canvas(self.carte_pokemon, bg="#2992B0")
+        self.fond_carte_pokemon.place(x=0,y=0,relheight=1,relwidth=1)
+
+        
+
+        # Canvas où il y aura limage du  Pokemon
+        self.canvas_pokemon = tk.Canvas(self.carte_pokemon, bg="#2992B0")
+        if image_tk is not None:
+            self.canvas_pokemon.create_image(40,40,image=image_tk,anchor="center")
+            self.carte_pokemon.image_tk = image_tk #On le garde en instance pour pas qu'il se fasse elim
+        self.canvas_pokemon.grid(row=0,rowspan=4,column=0,columnspan=5,sticky="nsew")
+
+
+        # Labels pour nom et numero
+        label_pokemon_nom = ttk.Label(self.carte_pokemon, text=f"{nom}")
+        label_pokemon_nom.grid(row=5,rowspan=2,column=0,columnspan=3,sticky="nsew")
+
+        label_pokemon_numero = ttk.Label(self.carte_pokemon, text=f"#{numero}")
+        label_pokemon_numero.grid(row=4,rowspan=1,column=0,columnspan=1,sticky="nsw")
+
+
+        # Canvas où il yaura les types de pkemon (en icone)
+        canvas_type1 = tk.Canvas(self.carte_pokemon, bg="green")
+        canvas_type1.grid(row=8,rowspan=1,column=0,columnspan=2,sticky="nsew")
+
+        canvas_type2 = tk.Canvas(self.carte_pokemon, bg="yellow")
+        canvas_type2.grid(row=8,rowspan=1,column=3,columnspan=2,sticky="nsew")
+
+        return self.carte_pokemon,self.canvas_pokemon
+
 
 class Poke_Details_Window(tk.Toplevel): #On crée une autre fenêtre qui n'interfere pas notre fenêtre principale 
     def __init__(self,nom_pokemon,direction_gif,direction_image=None):
@@ -472,13 +679,11 @@ class Poke_Details_Window(tk.Toplevel): #On crée une autre fenêtre qui n'inter
         
         self.minsize(500,300)
         
-        self.ecran=Image.open("View/pokemon__template_no_evolution_by_trueform_d3hs6u9.png")
-
-        self.details_ecran=Fond_Ecran(self,self.ecran,"red",False)
-        self.details_ecran.pack(fill="both",expand=1)
+        self.ecran=Image.open("View/Back1.jpeg")
+# View/pokemon__template_no_evolution_by_trueform_d3hs6u9.png
+        self.details_ecran=Fond_Ecran(self,self.ecran,"red",False,affichage_pokemon=Image.open(direction_image))
         self.direction_gif=direction_gif
-        self.direction_image=direction_image
-        self.afficher_image()
+        self.details_ecran.pack(fill="both",expand=1)
 
     
     def configuration_gif(self,width_rel=0.5, height_rel=0.25):
@@ -504,11 +709,14 @@ class Poke_Details_Window(tk.Toplevel): #On crée une autre fenêtre qui n'inter
             pos_x = int(canvas_width * pos_x_rel)
             pos_y = int(canvas_height * pos_y_rel)
             
-            if compteur_frames_gif == 0:
-                self.image_on_canvas = self.details_ecran.create_image(pos_x, pos_y, image=frame, anchor='center')
-            else:
-                self.details_ecran.itemconfig(self.image_on_canvas, image=frame)
+            # Supprimer l'image précédente si elle existe
+            if hasattr(self, 'image_on_canvas'):
+                self.details_ecran.delete(self.image_on_canvas)
             
+            # Afficher la nouvelle frame
+            self.image_on_canvas = self.details_ecran.create_image(pos_x, pos_y, image=frame, anchor='center')
+            
+            # Planifier la mise à jour suivante
             compteur_frames_gif = (compteur_frames_gif + 1) % len(self.gif_frames)
             self.after(self.delai_frames_gif, self.afficher_gif, compteur_frames_gif, pos_x_rel, pos_y_rel)
 
@@ -521,8 +729,8 @@ class Poke_Details_Window(tk.Toplevel): #On crée une autre fenêtre qui n'inter
         pos_y = int(self.hauteur_fenetre * y_rel)
 
         print("\n config de ton window:",self.largeur_fenetre,self.hauteur_fenetre)
-        print("\n config de ton image:",image_largeur,image_hauteur)
-        print("\n config de ton image:",pos_x,pos_y,"\n")
+        print("\n config de taille image:",image_largeur,image_hauteur)
+        print("\n config de position image:",pos_x,pos_y,"\n")
         self.image_pokemon_tk=ImageTk.PhotoImage(self.image_pokemon.resize((image_largeur,image_hauteur)))
         self.details_ecran.create_image(pos_x,pos_y,image=self.image_pokemon_tk,anchor="center")
         
