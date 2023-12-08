@@ -21,17 +21,16 @@ class Gestion_Data:
             if np.issubdtype(self.poke_data[filtre].dtype, np.number):
                 if len(Filtres_valeurs_possibles[filtre]) <= 600:
                     if len(Filtres_valeurs_possibles[filtre])<=10:
-                        type_filtres[filtre] = True,"Categorique_Type"   
+                        type_filtres[filtre] = True,"Categorique_Type_court"   
+                    elif len(Filtres_valeurs_possibles[filtre])==2:
+                        type_filtres[filtre]=True,"Booleen_Type"
                     else:
                         type_filtres[filtre] = True,"BatailleStat_Type"
                 else:
                     type_filtres[filtre] = True, "Id_Type"
             # booleen
-            elif self.poke_data[filtre].dtype == np.bool_:
+            elif self.poke_data[filtre].dtype == np.bool_  :
                 type_filtres[filtre] = False, "Booleen_Type"
-            
-            elif len(Filtres_valeurs_possibles[filtre]) < 15:
-                type_filtres[filtre] = False, "Categorique_Type"
             # Texte
             elif self.poke_data[filtre].dtype == np.object_:
                 if len(Filtres_valeurs_possibles[filtre])<=600:

@@ -21,46 +21,80 @@ Hacer cumplir la estructura: Al declarar FilterStrategy como una clase abstracta
                                 de Python generará un error en tiempo de ejecución.
                                 """
 
-def set_strategy(filtre,test_numerique,Type):
-    # print("filtre:",filtre)
-    # print("test numerique:",test_numerique)
-    # print(f"Type:{Type}:{type(Type)}")
-    class strategy_filtrage(Filtre):
-        def application_filtre(self,data,valeur_filtree):
-            if test_numerique:
-                if Type=="Id_Type":
-                    print("identifiant nominale detecté")
-                    return data[data[filtre].astype(str).str.startswith(str(valeur_filtree))]
-                else:
-                    return data[data[filtre] == int(valeur_filtree)]
-            else:
-                if Type=="Id_Type":
-                    print("identifiant numerique detecté")
-                    return data[data[filtre].str.lower().str.contains(valeur_filtree.lower())]
-                else:
-                    return data[data[filtre].str.lower() == valeur_filtree.lower()]
-                 #Demander laurine si pour identificator afficher slment ce qui commence par la chaine de charact
-                 #ou comme j'ai fais ceux que contiennent tous la chaine
-    return strategy_filtrage
 
-class Random(Filtre):
-    def application_filtre(self, data, valeur_filtree):
-        num_pokemons = int(valeur_filtree)
-        return data.sample(n=num_pokemons)
+
+
+def set_strategy(filtre,test_numerique,Type,strategie="Recherche_Simple"):
+    class Filtrage_Simple(Filtre):
+            def application_filtre(self,data,valeur_filtree):
+                if test_numerique:
+                    if Type=="Id_Type":
+                        print("identifiant nominale detecté")
+                        return data[data[filtre].astype(str).str.startswith(str(valeur_filtree))]
+                    else:
+                        return data[data[filtre] == int(valeur_filtree)]
+                else:
+                    if Type=="Id_Type":
+                        print("identifiant numerique detecté")
+                        return data[data[filtre].str.lower().str.contains(valeur_filtree.lower())]
+                    else:
+                        return data[data[filtre].str.lower() == valeur_filtree.lower()]
+                    #Demander laurine si pour identificator afficher slment ce qui commence par la chaine de charact
+                    #ou comme j'ai fais ceux que contiennent tous la chaine
     
-class AndStrategy(Filtre):
-    def __init__(self, *strategies):
-        self.strategies = strategies
 
-    def application_filtre(self, data, valeur_filtree):
-        for strategy in self.strategies:
-            data = strategy.application_filtre(data, valeur_filtree)
-        return data
+    class Filtrage_Plage(Filtre):
+            def application_filtre(self, data, valeur_filtree):
+                if test_numerique:
+                    if Type=="BatailleStat_Type":
+                        return data[(data[filtre] >= valeur_filtree[0]) & (data[filtre] <= valeur_filtree[1])]
+    
 
-class SortByIDStrategy(Filtre):
-    def application_filtre(self, data, valeur_filtree=None):
-        return data.sort_values('Number')
+    class Random(Filtre):
+            def application_filtre(self, data, valeur_filtree):
+                num_pokemons = int(valeur_filtree)
+                return data.sample(n=num_pokemons)
 
-# Luego puedes crear una instancia de AndStrategy con tus estrategias
-strategy = AndStrategy(set_strategy('Type_1', False, 'Text_Type')(), SortByIDStrategy())
-# Ahora puedes usar strategy.application_filtre(data, valeur_filtree) para filtrar y ordenar tus datos
+    
+    class Ordre_Filtre(Filtre):
+        def application_filtre(self, data, valeur_filtree=True):
+            if valeur_filtree is True:
+                return data.sort_values(filtre, ascending=True)
+            else:
+                return data.sort_values(filtre, ascending=False)    
+
+
+    class AndStrategy(Filtre):
+        def __init__(self, *strategies):
+            self.strategies = strategies
+
+        def application_filtre(self, data, valeur_filtree):
+            for strategy in self.strategies:
+                data = strategy.application_filtre(data, valeur_filtree)
+            return data
+
+    def combine_strategies(*strategies):
+        return AndStrategy(*strategies)   
+
+    if strategie=="Recherche_Simple":
+        return Filtrage_Simple
+    elif strategie=="Recherche_plage_de_valeurs":
+        return Filtrage_Plage
+    elif strategie=="Random":
+        return Random
+    elif strategie=="Ordre":
+        return Ordre_Filtre
+    elif isinstance(strategie, list):
+        # Si 'strategie' es una lista, combinar las estrategias
+        strategy_instances = []
+        for strat in strategie:
+            strategy_class = set_strategy(filtre, test_numerique, Type, strat)
+            strategy_instances.append(strategy_class())
+        return combine_strategies(*strategy_instances)        
+
+
+    
+
+
+
+
