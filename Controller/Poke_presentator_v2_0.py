@@ -6,8 +6,13 @@ from Filtre.Filtre_strategy import *
 class Control_poke:
     def __init__(self,data_direction) :  
         self.DataBase= Gestion_Data(data_direction)
-        self.poke_data=self.DataBase.get_poke_data()
         self.filtres_info=self.DataBase.get_poke_filtres_data()
+        self.poke_data=self.DataBase.get_poke_data()
+        print(self.poke_data.head(5))
+        self.arbre_poke_noeuds=self.DataBase.reorganiser_colonnes()
+        self.poke_data=self.DataBase.get_poke_data()
+        print(self.poke_data.head(5))
+
         self.poke_media=self.DataBase.get_poke_media()
         self.compteur_cartes_pokemons_affiches=30
         self.GUI_poke=GUI()
@@ -49,7 +54,10 @@ class Control_poke:
         print(self.GUI_poke.zone_recherche.resultats.selection())
         for pokemon in self.GUI_poke.zone_recherche.resultats.selection():
             ligne_selection=self.GUI_poke.zone_recherche.resultats.item(pokemon)
-            pokemon=(self.poke_data[self.poke_data["Name"]== ligne_selection["values"][1]].iloc[0]).iloc[1]
+            nom_pokemon = ligne_selection["values"][1]
+
+            # Utilisez 'loc' pour filtrer les données et accéder à la colonne par position.
+            pokemon = self.poke_data.loc[self.poke_data.iloc[:, 1] == nom_pokemon, self.poke_data.columns[1]].iloc[0]
             direction_gif=self.poke_media[1][pokemon]
 
             direction_image=self.poke_media[0][pokemon]
@@ -107,10 +115,10 @@ class Control_poke:
         else: 
             if len(id_nom)==1:
                 Strategie=id_nom
-                strategy=set_strategy(Strategie[0][0],Strategie[0][1][0],Strategie[0][1][1])
+                strategy=set_strategy(Strategie[0][0],Strategie[0][1][0],Strategie[0][1][1],trie=self.arbre_poke_noeuds)
             else:
                 Strategie=list(id_nom[0])
-                strategy=set_strategy(Strategie[0],Strategie[1][0],Strategie[1][1])
+                strategy=set_strategy(Strategie[0],Strategie[1][0],Strategie[1][1],trie=self.arbre_poke_noeuds)
 
         #Comme strategy c'est une classe
             #On accède à la fonction aaplication_filtre() qui nous retourne les données filtrés
