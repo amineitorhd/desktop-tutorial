@@ -72,9 +72,11 @@ class GUI(tk.Tk):
     def actualisation_mode_obscur(self):
         if self.ecran_actuel==self.ecran:
             self.ecran_actuel=self.ecran_obscur #On swich d'ecran
+            couleur="black"
         else:
             self.ecran_actuel=self.ecran
-        
+            couleur="#2992B0"
+
         if self.configuration.ecran_actuel_configuration==self.configuration.image_configuration:
             self.configuration.ecran_actuel_configuration=self.configuration.image_configuration_obscure
         else:
@@ -89,14 +91,17 @@ class GUI(tk.Tk):
         self.configuration.fond_ecran_configuration.switch_mode_ecran(self.configuration.ecran_actuel_configuration)
         self.filtres_avancee.cv.switch_mode_ecran(self.filtres_avancee.squirtel_actuel)
 
+        for pokemon,carte in self.affichage_cartes_pokemons.dico_image_carte.items():
+            carte[0].configure(bg=couleur)
+
 
     def affichage_info_pokemon(self,pokemon):
         print(f"tu veux plus d'info de: {pokemon}")
 
 
-    def affichage_info_complete_pok(self,pokemon):
-        nom=pokemon.iloc[1]
-        poke_info_window=Poke_Details_Window(nom,"Model/GIF/pikachu-5.gif","Model/Characters_image/25-belle.png")
+    def affichage_info_complete_pok(self,pokemon,gif,image):
+        nom=pokemon
+        poke_info_window=Poke_Details_Window(nom,gif,image)
         for info in pokemon:
             ttk.Label(poke_info_window,text=f"{info}").pack(side="right")
         # Si on ferme le window, on indique d'arrêter lethred
@@ -523,7 +528,7 @@ class Frame_poke_affichage_v2(ttk.Frame):
         self.nb_poke_resultats=0
 
         self.place(relx=0.5,rely=0.05,relwidth=0.4999,relheight=0.9)
-        self.canvas=tk.Canvas(self,bg="magenta",scrollregion=(0,0,self.winfo_width(),self.pokemons_affiches*330))
+        self.canvas=tk.Canvas(self,bg="pink",scrollregion=(0,0,self.winfo_width(),self.pokemons_affiches*330))
         self.canvas.pack(fill="both",expand=1)
         
         self.frame=ttk.Frame(self)
@@ -548,9 +553,9 @@ class Frame_poke_affichage_v2(ttk.Frame):
             self.configuration_affichage(None)
         for poke_nom in poke_nom_data:
             carte,numero=self.dico_pokemon_carte[poke_nom]
-            image_carte=self.dico_image_carte[poke_nom]
+            image_carte=self.dico_image_carte[poke_nom][0]
             carte.pack(fill="both",padx=(0,15))
-            self.amine=ImageTk.PhotoImage(Image.open("Model/Characters_image/"+f"{numero}"+".png").resize((150,200)))
+            self.amine=ImageTk.PhotoImage(Image.open(self.dico_image_carte[poke_nom][1]).resize((150,200)))
             self.images_stock.append(self.amine)
             image_carte.create_image(40,40,image=self.amine,anchor="nw")
             self.poke_cartes_affichees.append(carte)
@@ -565,11 +570,12 @@ class Frame_poke_affichage_v2(ttk.Frame):
         for num,poke_nom in enumerate(poke_nom_data):
             if num<30:
                 carte,numero=self.dico_pokemon_carte[poke_nom]
-                image_carte=self.dico_image_carte[poke_nom]
+                image_carte=self.dico_image_carte[poke_nom][0]
+                direction=self.dico_image_carte[poke_nom][1]
                 carte.pack(fill="both",padx=(0,15))
-                self.amine=ImageTk.PhotoImage(Image.open("Model/Characters_image/"+f"{numero}"+".png").resize((150,200)))
+                self.amine=ImageTk.PhotoImage(Image.open(direction).resize((150,200)))
                 self.images_stock.append(self.amine)
-                image_carte.create_image(40,40,image=self.amine,anchor="ew")
+                image_carte.create_image(80,40,image=self.amine,anchor="nw")
                 self.poke_cartes_affichees.append(carte)
                 print(num)
             else:
@@ -605,10 +611,10 @@ class Frame_poke_affichage_v2(ttk.Frame):
 
         self.canvas.config(scrollregion=(0,0,self.winfo_width(),hauteur_fenetre_scroll))
         self.canvas.create_window((0,0),window=self.frame,
-                            width=self.winfo_width(),
-                            height=hauteur_fenetre_scroll,
-                            anchor="nw")
-
+                        width=self.winfo_width(),
+                        height=hauteur_fenetre_scroll,
+                        anchor="nw")
+        print("hauteur actualisée:",hauteur_fenetre_scroll)
 
     def creation_poke_carte(self, nom, numero,type1,type2):
         self.carte_pokemon = ttk.Frame(self.frame)
@@ -618,13 +624,12 @@ class Frame_poke_affichage_v2(ttk.Frame):
         self.fond_carte_pokemon.pack(fill="both", expand=True)
 
 
-     
-        
-        self.canvas_information=tk.Canvas(self.fond_carte_pokemon,bg="pink")
+        self.canvas_information=tk.Canvas(self.fond_carte_pokemon,bg="pink")     
         self.canvas_information.pack(side="right",fill="both",expand=True)
+      
 
         # Canvas para la imagen del Pokemon
-        self.canvas_pokemon = tk.Canvas(self.fond_carte_pokemon, bg="black")
+        self.canvas_pokemon = tk.Canvas(self.fond_carte_pokemon, bg="#2992B0")
         self.canvas_pokemon.pack(side="right", fill="both")
 
 
@@ -632,6 +637,7 @@ class Frame_poke_affichage_v2(ttk.Frame):
         label_pokemon_nom = tk.Label(self.canvas_information, text=f"{nom}", font=("Helvetica", 20), bg="grey")
         # label_pokemon_nom=tk.Canvas(self.canvas_information,bg="grey")
         label_pokemon_nom.pack(side="top", fill="x")
+
 
         label_pokemon_numero = tk.Label(self.canvas_information, text=f"#{numero}", bg="#2992B0")
         # label_pokemon_numero=tk.Canvas(self.canvas_information,bg="black")
@@ -652,7 +658,7 @@ class Frame_poke_affichage_v2(ttk.Frame):
         return self.carte_pokemon, self.canvas_pokemon
 
 
-    def initialisation_cartes_pokemons(self,data_pokemons):
+    def initialisation_cartes_pokemons(self,data_pokemons,data_media):
         print("initialisation cartes:")
         for index,pokemon_info in data_pokemons.iterrows():
             poke_nom=pokemon_info.iloc[1]
@@ -661,7 +667,7 @@ class Frame_poke_affichage_v2(ttk.Frame):
             poke_2=pokemon_info.iloc[3]
             pokemon_carte=self.creation_poke_carte(poke_nom,poke_numero,f"{poke_1}",f"{poke_2}")
             self.dico_pokemon_carte[poke_nom]=pokemon_carte[0],poke_numero
-            self.dico_image_carte[poke_nom]=pokemon_carte[1]
+            self.dico_image_carte[poke_nom]=pokemon_carte[1],data_media[poke_nom]
 
         print("fin initialisation")
 
@@ -672,24 +678,25 @@ class Frame_poke_affichage_v2(ttk.Frame):
 
 
 class Poke_Details_Window(tk.Toplevel): #On crée une autre fenêtre qui n'interfere pas notre fenêtre principale 
-    def __init__(self,nom_pokemon,direction_gif,direction_image=None):
+    def __init__(self,nom_pokemon,direction_gif,direction_image):
         super().__init__()
-        
+        self.direction_image=direction_image
         self.thread_en_marche=True #Controle du Thread
 
         self.title(f"Info of {nom_pokemon} ")
         #Initialisation taille du pokedex_GUI
         ecran_largeur = self.winfo_screenwidth()
         ecran_longeur = self.winfo_screenheight()
-        self.geometry(f"{ecran_largeur-(ecran_largeur//2)}x{ecran_longeur-(ecran_longeur//2)}")
+        self.geometry("890x750")
         self.size #Juste pour actualiser les info sur la taille de la fenêtre
                     #Car en t=0 début tkinter fournies les relatives puis après en pixel
         self.largeur_fenetre = self.winfo_screenwidth()
         self.hauteur_fenetre = self.winfo_screenheight()
         
-        self.minsize(500,300)
+        self.minsize(550,720)
+        self.maxsize(900,1200)
         
-        self.ecran=Image.open("View/Back1.jpeg")
+        self.ecran=Image.open("View/poke_info.jpeg")
 # View/pokemon__template_no_evolution_by_trueform_d3hs6u9.png
         self.details_ecran=Fond_Ecran(self,self.ecran,"red",affichage_pokemon=Image.open(direction_image))
         self.direction_gif=direction_gif
@@ -705,13 +712,13 @@ class Poke_Details_Window(tk.Toplevel): #On crée une autre fenêtre qui n'inter
         gif_hauteur = int(self.hauteur_fenetre * height_rel)
         for frame in range(gif_pokemon.n_frames):
             gif_pokemon.seek(frame)
-            frame_photo = ImageTk.PhotoImage(gif_pokemon.copy().resize((gif_largeur,gif_hauteur)))
+            frame_photo = ImageTk.PhotoImage(gif_pokemon.copy())
             self.gif_frames.append(frame_photo)
         self.delai_frames_gif = gif_pokemon.info["duration"]
         self.afficher_gif(0)
 
 
-    def afficher_gif(self, compteur_frames_gif, pos_x_rel=0.25, pos_y_rel=0.25):
+    def afficher_gif(self, compteur_frames_gif, pos_x_rel=0.25, pos_y_rel=0.49):
         if self.thread_en_marche:
             frame = self.gif_frames[compteur_frames_gif]
             canvas_width = self.details_ecran.winfo_width()

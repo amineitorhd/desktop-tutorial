@@ -1,11 +1,17 @@
 import pandas as pd
 import numpy as np
-
+import os,re
 
 class Gestion_Data:
     def __init__(self,poke_data_direction):
+        self.data=poke_data_direction
         self.poke_data=pd.read_csv(poke_data_direction)
-    
+                # Inicializar el diccionario para almacenar las rutas relativas de los GIFs
+        self.diccionario_gifs = {}
+        self.diccionario_imagenes={}
+        self.data_media("Model\\Characters_image",".png")
+        self.data_media("Model\\GIF",".gif")
+
     def get_poke_data(self):
         return self.poke_data
     
@@ -59,4 +65,130 @@ class Gestion_Data:
         return Info_Filtres
     
 
+    def normalizar_nombre(self,nombre):
+        
+        # Primero, dividimos el nombre por espacios y tomamos la primera palabra
+        if '♀' in nombre:
+            nombre = nombre.replace('♀', '_f')
+        elif '♂' in nombre:
+            nombre = nombre.replace('♂', '_m')
+        elif "'" in nombre:
+            nombre=nombre.replace("'","")
+        elif "Normal Forme" in nombre:
+            nombre=nombre.replace("Normal Forme","")
+        elif "Plant Cloak" in nombre:
+            nombre=nombre.replace("Plant Cloak","")
+        elif "Shield Forme" in nombre:
+            nombre=nombre.replace("Shield Forme","")
+        elif "Altered Forme" in nombre:
+            nombre=nombre.replace("Altered Forme","")
+        elif "Land Forme" in nombre:
+            nombre=nombre.replace("Land Forme","")
+        elif "Standard Mode" in nombre:
+            nombre=nombre.replace("Standard Mode","")
+        if nombre == 'Mr. Mime' or nombre=="mr. mime":
+            return 'mr._mime'
+        elif nombre=="Mime Jr." or nombre == "mime jr.":
+            return "mime_jr"
+        elif "HoopaHoopa Confined" in nombre:
+            return "hoopa"
+        elif "Zygarde" in nombre:
+            return "zygarde"
+        elif "Flabébé"==nombre or "flabébé"==nombre:
+            return "flabebe"
+
+
+        nombre_dividido = nombre.split()
+        primera_palabra = nombre_dividido[0]
+        # Luego, buscamos si hay una segunda palabra que comienza con "Mega"
+        # y la concatenamos con la primera palabra sin espacios
+        
+        nombre=primera_palabra
+        # Insertar un guión antes de cada letra mayúscula que no sea la primera letra
+        nombre_con_guiones = re.sub(r'(?<!^)(?=[A-Z])', '-', nombre)
+        # Convertir a minúsculas y reemplazar caracteres especiales con guiones
+        nombre_normalizado = re.sub(r'\W+', '-', nombre_con_guiones).lower()
+        # Eliminar posibles guiones al final
+        nombre_normalizado = re.sub(r'-+$', '', nombre_normalizado)
+        if len(nombre_dividido)>2:
+            if nombre_dividido[2].lower()=="X".lower():
+                return nombre_normalizado+"x"
+            elif nombre_dividido[2].lower()=="Y".lower():
+                return nombre_normalizado+"y"
+        else:
+            return nombre_normalizado
+
+    def data_media(self,ruta_carpeta_media,media_type):
+        
+
+        if self.data=="Model/pokemon.csv":
+            self.diccionario_imagenes["CharizardMega Charizard X"]="Model/Characters_image/6-mega-x.png"
+            self.diccionario_imagenes["CharizardMega Charizard Y"]="Model\Characters_image/6-mega-y.png"
+            self.diccionario_imagenes["MewtwoMega Mewtwo X"]="Model/Characters_image/150-mega-y.png"
+            self.diccionario_imagenes["MewtwoMega Mewtwo Y"]="Model/Characters_image/150-mega-y.png"
+            self.diccionario_imagenes["HoopaHoopa Unbound"]="Model/Characters_image/720-unbound.png"
+
+            
+            
+        # Definir la ruta a la carpeta donde se encuentran los GIFs
+        # Crear un diccionario con nombres normalizados de los pokémon
+        nombres_normalizados = {
+            self.normalizar_nombre(pokemon_name): pokemon_name
+            for pokemon_name in self.poke_data.iloc[:, 1].values
+        }
+        if media_type==".gif":
+            # Iterar sobre todos los archivos en la carpeta de GIFs
+            for archivo in os.listdir(ruta_carpeta_media):
+                # Comprobar si el archivo es un GIF
+                if archivo.endswith(media_type):
+                    # Obtener las partes del nombre del archivo separadas por guión
+                    partes_nombre = archivo.split('-')
+                    # Comprobar si el archivo no tiene un número después del nombre del pokémon
+                    if (len(partes_nombre) == 1 or
+                        (len(partes_nombre) > 1 and not partes_nombre[-1][0].isdigit())):
+                        # Construir la ruta relativa y añadirla al diccionario si el nombre está normalizado
+                        relative_path = os.path.join(ruta_carpeta_media, archivo)
+                        nombre_normalizado_gif = os.path.splitext(os.path.basename(relative_path))[0]
+                        if nombre_normalizado_gif in nombres_normalizados:
+                            self.diccionario_gifs[nombres_normalizados[nombre_normalizado_gif]] = relative_path
+            i=0
+            for nom in self.poke_data.iloc[:,1].values:
+                if nom not in self.diccionario_gifs:
+                    self.diccionario_gifs[nom]="Model/GIF/xd.gif"
+                    i+=1
+            print(f"{i} erreur pour les gifs des pokemons")
+            
+        if media_type==".png":
+            i=0
+            print("111111111111111111111111111ok")
+            for archivo in os.listdir(ruta_carpeta_media):
+                relative_path = os.path.join(ruta_carpeta_media, archivo)
+                if archivo.endswith(media_type):
+                    partes_nombre=archivo.split("-")
+                    # partes_nombre.remove("xd")
+                    if len(partes_nombre)==1 and partes_nombre!=['xd.png']:
+                        
+                        num_png=int(partes_nombre[0].replace(".png",""))
+                        nom_pokemon = self.poke_data.loc[self.poke_data.iloc[:, 0] == num_png].iloc[:, 1].values[0]
+                        self.diccionario_imagenes[nom_pokemon]=relative_path
+                    if len(partes_nombre)==2:
+                        if any(keyword.lower() in partes_nombre[1].lower() for keyword in ["Mega","Attack", "Defense","Speed", "Primal", "Sandy",
+                                                                                           "Trash", "Heat", "Wash", "Frost", "Fan", 
+                                                                                           "Mow", "Female","Origin","Sky","Therian",
+                                                                                           "Black","White","Resolute","Pirouette","Shield",]):
+                            # Condition for other keywords
+                            num_png = int(partes_nombre[0].replace(".png", ""))
+                            noms_pokemons = self.poke_data.loc[self.poke_data.iloc[:, 0] == num_png].iloc[:, 1]
+                            for pokemon in noms_pokemons:
+                                if partes_nombre[1].replace(".png","") in pokemon.lower():
+                                    self.diccionario_imagenes[pokemon] = relative_path
+            j=0
+            for nom in self.poke_data.iloc[:,1].values:
+                if nom not in self.diccionario_imagenes:
+                        self.diccionario_imagenes[nom]="Model/Characters_image/xd.png"
+                        j+=1
+            print(f"{j} erreur pour les images des pokemons")
+
+    def get_poke_media(self):
+        return self.diccionario_imagenes,self.diccionario_gifs
 

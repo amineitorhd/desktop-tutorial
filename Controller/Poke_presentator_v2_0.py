@@ -2,13 +2,13 @@ from Model.Data_manager_v2_0 import Gestion_Data
 from View.pok_GUI_v3_3 import GUI
 from Filtre.Filtre_strategy import *
 
-print("Ok")
 
 class Control_poke:
     def __init__(self,data_direction) :  
         self.DataBase= Gestion_Data(data_direction)
         self.poke_data=self.DataBase.get_poke_data()
         self.filtres_info=self.DataBase.get_poke_filtres_data()
+        self.poke_media=self.DataBase.get_poke_media()
         self.compteur_cartes_pokemons_affiches=30
         self.GUI_poke=GUI()
         
@@ -22,6 +22,8 @@ class Control_poke:
         result=strat.application_filtre(strat,self.poke_data,self.test)
         print(result)
         self.test=False
+    
+    
     def initialisation_GUI(self):
         self.GUI_poke.filtres_avancee.configuration_initiale(self.filtres_info[-2:])
         self.GUI_poke.filtres_avancee.set_command(self.chercher_data_filtre)
@@ -31,7 +33,7 @@ class Control_poke:
         self.GUI_poke.zone_recherche.resultats.bind('<Double-1>', self.affichage_info_complete)  # Si double click
         self.GUI_poke.zone_recherche.resultats.bind('<Return>', self.affichage_info_complete)  # Ou si appuie sur enter)
         self.GUI_poke.zone_recherche.set_command(self.chercher_data)
-        self.GUI_poke.affichage_cartes_pokemons.initialisation_cartes_pokemons(self.poke_data)
+        self.GUI_poke.affichage_cartes_pokemons.initialisation_cartes_pokemons(self.poke_data,self.poke_media[0])
         self.GUI_poke.affichage_cartes_pokemons.bout_set_command(self.affichage_plus)
         self.GUI_poke.affichage_cartes_pokemons.affichage_poke_liste(self.poke_data.iloc[:self.compteur_cartes_pokemons_affiches, 1],initialisation=True)
         # self.GUI_poke.affichage_cartes_pokemons.affichage_poke_liste(30)
@@ -42,12 +44,16 @@ class Control_poke:
         # self.GUI_poke.affichage_pokemons.set_command(self.affichage_plus)
         self.GUI_poke.demarage()
 
+
     def affichage_info_complete(self,event):
         print(self.GUI_poke.zone_recherche.resultats.selection())
         for pokemon in self.GUI_poke.zone_recherche.resultats.selection():
             ligne_selection=self.GUI_poke.zone_recherche.resultats.item(pokemon)
-            pokemon=self.poke_data[self.poke_data["Name"]== ligne_selection["values"][1]].iloc[0]
-            self.GUI_poke.affichage_info_complete_pok(pokemon)
+            pokemon=(self.poke_data[self.poke_data["Name"]== ligne_selection["values"][1]].iloc[0]).iloc[1]
+            direction_gif=self.poke_media[1][pokemon]
+
+            direction_image=self.poke_media[0][pokemon]
+            self.GUI_poke.affichage_info_complete_pok(pokemon,direction_gif,direction_image)
 
 
 

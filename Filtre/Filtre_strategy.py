@@ -98,3 +98,35 @@ def set_strategy(filtre,test_numerique,Type,strategie="Recherche_Simple"):
 
 
 
+import re
+
+def normalizar_nombre(nombre):
+    # Primero, dividimos el nombre por espacios y tomamos la primera palabra
+    nombre_dividido = nombre.split()
+    primera_palabra = nombre_dividido[0]
+    # Luego, buscamos si hay una segunda palabra que comienza con "Mega"
+    # y la concatenamos con la primera palabra sin espacios
+    
+    
+
+    nombre=primera_palabra
+    # Insertar un guión antes de cada letra mayúscula que no sea la primera letra
+    nombre_con_guiones = re.sub(r'(?<!^)(?=[A-Z])', '-', nombre)
+    # Convertir a minúsculas y reemplazar caracteres especiales con guiones
+    nombre_normalizado = re.sub(r'\W+', '-', nombre_con_guiones).lower()
+    # Eliminar posibles guiones al final
+    nombre_normalizado = re.sub(r'-+$', '', nombre_normalizado)
+    if len(nombre_dividido)>2:
+        if nombre_dividido[2].lower()=="X".lower():
+            return nombre_normalizado+"x"
+        elif nombre_dividido[2].lower()=="Y".lower():
+            return nombre_normalizado+"y"
+    else:
+        return nombre_normalizado
+
+# Ejemplo de uso
+print(normalizar_nombre("CharizardMega Charizard X"))  # Debería imprimir 'charizard-megax'
+print(normalizar_nombre("BlastoiseMega Blastoise"))   # Debería imprimir 'blastoise-mega'
+
+
+print( "charizard-megax" in normalizar_nombre("Charizard"))
