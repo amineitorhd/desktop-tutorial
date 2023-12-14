@@ -8,38 +8,37 @@ class Control_poke:
         self.DataBase= Gestion_Data(data_direction)
         self.filtres_info=self.DataBase.get_poke_filtres_data()
         self.poke_data=self.DataBase.get_poke_data()
-        print(self.poke_data.head(5))
+        # print(self.poke_data.head(5))
         self.arbre_poke_noeuds=self.DataBase.reorganiser_colonnes()
         self.poke_data=self.DataBase.get_poke_data()
-        print(self.poke_data.head(5))
+        # print(self.poke_data.head(5))
 
         self.poke_media=self.DataBase.get_poke_media()
         self.compteur_cartes_pokemons_affiches=30
         self.GUI_poke=GUI()
-        
-        self.test=True
-        self.GUI_poke.sort_command(self.ordre)
+
         
         self.initialisation_GUI()
 
-    def ordre(self):
-        strat=set_strategy("#",True,"Id_Type",strategie="Ordre")
-        result=strat.application_filtre(strat,self.poke_data,self.test)
-        print(result)
-        self.test=False
+    def ordre(self,filtre_ordre):
+        if filtre_ordre!="":
+            print("Je suis controller, filtre à ordonnée:",filtre_ordre)
     
     
     def initialisation_GUI(self):
-        self.GUI_poke.filtres_avancee.configuration_initiale(self.filtres_info[-2:])
+        self.GUI_poke.filtres_avancee.configuration_initiale(self.filtres_info[1],self.filtres_info[2])
         self.GUI_poke.filtres_avancee.set_command(self.chercher_data_filtre)
         self.GUI_poke.filtres_avancee.bout_reset_set_command(self.reset_affichage)
         
+        self.GUI_poke.zone_recherche.configuration_box_ordre(self.filtres_info[1])
         self.GUI_poke.zone_recherche.configuration_affichage_resultats(self.filtres_info[0])
         self.GUI_poke.zone_recherche.resultats.bind('<Double-1>', self.affichage_info_complete)  # Si double click
         self.GUI_poke.zone_recherche.resultats.bind('<Return>', self.affichage_info_complete)  # Ou si appuie sur enter)
-        self.GUI_poke.zone_recherche.set_command(self.chercher_data)
+        self.GUI_poke.zone_recherche.set_command(command_boutton_recherche=self.chercher_data,
+                                                 command_boutton_ordre=self.ordre)
         self.GUI_poke.affichage_cartes_pokemons.initialisation_cartes_pokemons(self.poke_data,self.poke_media[0])
         self.GUI_poke.affichage_cartes_pokemons.bout_set_command(self.affichage_plus)
+        self.GUI_poke.affichage_cartes_pokemons.set_command_poke_affichage(self.affichage_info_complete)
         self.GUI_poke.affichage_cartes_pokemons.affichage_poke_liste(self.poke_data.iloc[:self.compteur_cartes_pokemons_affiches, 1],initialisation=True)
         # self.GUI_poke.affichage_cartes_pokemons.affichage_poke_liste(30)
         # self.GUI_poke.affichage_pokemons.initialisation_cartes_pokemons(self.poke_data)
@@ -50,19 +49,52 @@ class Control_poke:
         self.GUI_poke.demarage()
 
 
-    def affichage_info_complete(self,event):
-        print(self.GUI_poke.zone_recherche.resultats.selection())
-        for pokemon in self.GUI_poke.zone_recherche.resultats.selection():
-            ligne_selection=self.GUI_poke.zone_recherche.resultats.item(pokemon)
-            nom_pokemon = ligne_selection["values"][1]
+    def affichage_info_complete(self,event,pokemon_carte=None):
+        # fct pr creer infos pkm
+        def creer_info_pkm(nom, donnees):
+            if nom is not None:
+                dir_gif = self.poke_media[1].get(nom, "View/error.gif")
+                dir_img = self.poke_media[0].get(nom, "View/error.gif")
+            else:
+                dir_gif=dir_img=None
+            return (nom, donnees, dir_gif, dir_img)
+        
+        # lst pr stocker infos pkm
+        infos_pkm = []
+        # obtenir idx des pkm sel ou pkm spec
+        idxs = [0] if pokemon_carte else self.GUI_poke.zone_recherche.resultats.selection()
+        
+        # boucle pr traiter chq pkm
+        for idx in idxs:
+            if pokemon_carte:
+                nom_pkm = pokemon_carte
+            else:
+                # obtenir ligne sel ds resultats recherche
+                ligne_sel = self.GUI_poke.zone_recherche.resultats.item(idx)
+                nom_pkm = ligne_sel["values"][1]
+            
+            # obtenir donnees pkm actuel
+            donnees_pkm = self.poke_data.loc[self.poke_data.iloc[:, 1] == nom_pkm]
+            idx_pkm = donnees_pkm.index[0]
+            # ajouter infos pkm actuel
+            infos_pkm.append(creer_info_pkm(nom_pkm, donnees_pkm))
+            
+            # traiter pkm prec et suiv
+            for decalage in [-1, 1]:
+                idx_voisin = idx_pkm + decalage
+                if 0 <= idx_voisin < len(self.poke_data):
+                    nom_voisin = self.poke_data.iloc[idx_voisin, 1]
+                    donnees_voisin = self.poke_data.iloc[idx_voisin]
+                    # ajouter infos pkm voisin
+                    infos_pkm.append(creer_info_pkm(nom_voisin, donnees_voisin))
+                else:
+                # ajouter pas de pkm voisin
+                    infos_pkm.append((None, None, None, None))
 
-            # Utilisez 'loc' pour filtrer les données et accéder à la colonne par position.
-            pokemon = self.poke_data.loc[self.poke_data.iloc[:, 1] == nom_pokemon, self.poke_data.columns[1]].iloc[0]
-            direction_gif=self.poke_media[1][pokemon]
-
-            direction_image=self.poke_media[0][pokemon]
-            self.GUI_poke.affichage_info_complete_pok(pokemon,direction_gif,direction_image)
-
+        # afficher infos pkm
+        print(infos_pkm[0][0],infos_pkm[1][0],infos_pkm[2][0])
+        # maj affichage avc infos compl pkm
+        self.GUI_poke.affichage_info_complete_pok(infos_pkm)
 
 
 
@@ -136,22 +168,35 @@ class Control_poke:
             self.GUI_poke.zone_recherche.affichage_temps_reel(list(tuple(pokemon) for pokemon in data_pour_afficher.values))
 
         
-    def chercher_data_filtre(self):
+    def chercher_data_filtre(self):  #hacer un excepcion si no hay filtros???
         self.poke_data=self.DataBase.get_poke_data()
         filtres_selectionnes=[]
         print("Controller application des filtres....")
-        for cle,valeur in self.GUI_poke.filtres_avancee.dico_scales.items():
-            print(cle,valeur[0],valeur[1],type(valeur[0]))
+        filtres_batailles=self.GUI_poke.filtres_avancee.dico_scales.items()
+        filtres_categories=self.GUI_poke.filtres_avancee.bouttons_choisi
+        for cle,valeur in filtres_batailles:
+            # print(cle,valeur[0],valeur[1],type(valeur[0]))
             if not (valeur[0]==None and valeur[1]==None):
                 filtres_selectionnes.append((cle,self.filtres_info[1][cle],valeur[0],valeur[1]))
-        print("Filtres selectionnees:",filtres_selectionnes)
+        if len(filtres_categories)==2:
+            filtre1=filtres_categories[0]
+            filtre2=filtres_categories[1]
+            print(filtre1[1],self.filtres_info[1][filtre1[1]],filtre1[0])
+            print(filtre2[1],self.filtres_info[1][filtre2[1]],filtre2[0])
 
-        for filtre, (test_num, type_filtre), valeur_min, valeur_max in filtres_selectionnes:
+        # print("Filtres selectionnees:",filtres_selectionnes)
+
+        for index,Filtre in enumerate(filtres_selectionnes):
+            filtre, (test_num, type_filtre), valeur_min, valeur_max=Filtre
             strategie = set_strategy(filtre, test_num, type_filtre, strategie="Recherche_plage_de_valeurs")
-            print(filtre, (test_num, type_filtre), valeur_min, valeur_max)
-
+            # print(filtre, (test_num, type_filtre), valeur_min, valeur_max)
+            if index==0:
+                print("initialisation_premiere plage")
+                self.poke_data_filtree=strategie.application_filtre(strategie, self.poke_data, (valeur_min, valeur_max))
             # Aplicar el primer filtro a self.poke_data
-            self.poke_data = strategie.application_filtre(strategie, self.poke_data, (valeur_min, valeur_max))
+            else:
+                print(index)
+                self.poke_data_filtree = strategie.application_filtre(strategie, self.poke_data_filtree, (valeur_min, valeur_max))
         
-        print(self.poke_data)
+        print(self.poke_data_filtree)
         

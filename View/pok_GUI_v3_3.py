@@ -28,15 +28,14 @@ class GUI(tk.Tk):
         self.fond_ecran=Fond_Ecran(self,self.ecran,"red",ecran_principal=True)
         self.fond_ecran.pack(expand=True,fill="both")
 
-        self.test=ttk.Button(self,text="sort")
-        # self.test.place(relx=0.1,rely=0,relheight=1,relwidth=0.2)
 
 
-        self.filtres_avancee=Frame_dynamique_filtres(self,1.5,0.15,0.0502,True,0.4,0.85,2,teleport=(True,0.95))
+
+        self.filtres_avancee=Frame_dynamique_filtres(self,1.5,0.15,0.0502,True,0.4,0.85,1,teleport=(True,0.95))
         
         self.boutton_filtres_avancee=ttk.Button(self,text="Filtres",
                                               command=lambda:self.filtres_avancee.animation(self.boutton_filtres_avancee))
-        self.boutton_filtres_avancee.place(relx=0.0502,rely=0.95,relwidth=0.4,relheight=0.05)
+        self.boutton_filtres_avancee.place(relx=0.4975,rely=0.95,relwidth=0.429,relheight=0.05)
 
 #Ordre d'initialisation important!!!
         #Initialisation de la barre de recherche
@@ -45,8 +44,9 @@ class GUI(tk.Tk):
 
         #Initialisation des réglages du Pokedex_GUI
         self.configuration=Frame_dynamique_configuration(self,-0.4,0.035,0.50,False,0.4,0.2,5)
-        self.config_configuration()
-
+        self.boutton_configuration=ttk.Button(self,text="Configuration",
+                                                    command=self.configuration.animation).place(relx=0.92,
+                                                    rely=0.95,relheight=0.05,relwidth=0.08)
         #Initialisation des affichages graphiques des pokemons
         # self.affichage_pokemons=Frame_Affichage_Pokemons(self) #Frame_Affichage_Pokemons(self)
         # self.bind("<Configure>",self.gestion_fenetre)
@@ -54,11 +54,8 @@ class GUI(tk.Tk):
 
         self.affichage_cartes_pokemons=Frame_poke_affichage_v2(self,self.ecran)
 
-    def config_configuration(self):
+        
 
-        self.boutton_configuration=ttk.Button(self,text="Configuration",
-                                                    command=self.configuration.animation).place(relx=0,
-                                                    rely=0.9,relheight=0.1,relwidth=0.05)
 
             
     def sort_command(self,command):
@@ -89,7 +86,10 @@ class GUI(tk.Tk):
             
         self.fond_ecran.switch_mode_ecran(self.ecran_actuel) #On met a jour le nouveau ecran
         self.configuration.fond_ecran_configuration.switch_mode_ecran(self.configuration.ecran_actuel_configuration)
-        self.filtres_avancee.cv.switch_mode_ecran(self.filtres_avancee.squirtel_actuel)
+        self.filtres_avancee.fond_ecran_autres.switch_mode_ecran(self.filtres_avancee.squirtel_actuel)
+        self.filtres_avancee.fond_ecran_categoriques.switch_mode_ecran(self.filtres_avancee.squirtel_actuel)
+        self.filtres_avancee.fond_ecran_bataille.switch_mode_ecran(self.filtres_avancee.squirtel_actuel)
+        
 
         for pokemon,carte in self.affichage_cartes_pokemons.dico_image_carte.items():
             carte[0].configure(bg=couleur)
@@ -99,10 +99,16 @@ class GUI(tk.Tk):
         print(f"tu veux plus d'info de: {pokemon}")
 
 
-    def affichage_info_complete_pok(self,pokemon,gif,image):
-        nom=pokemon
-        poke_info_window=Poke_Details_Window(nom,gif,image)
-        for info in pokemon:
+    def affichage_info_complete_pok(self,info):
+        pokemon_principal=info[0]
+        pokemon_nom=pokemon_principal[0]
+        gif_principal=pokemon_principal[2]
+        image_principal=pokemon_principal[3]
+
+
+
+        poke_info_window=Poke_Details_Window(pokemon_nom,gif_principal,image_principal)
+        for info in pokemon_principal[1]:
             ttk.Label(poke_info_window,text=f"{info}").pack(side="right")
         # Si on ferme le window, on indique d'arrêter lethred
         poke_info_window.protocol("WM_DELETE_WINDOW", poke_info_window.fermer_and_stop_thread)
@@ -117,7 +123,7 @@ class GUI(tk.Tk):
 #Création objet Canvas pour gerer l'affichage du fond d'ecran
 #Aussi pour gerer les regions de scroll possibles
 class Fond_Ecran(tk.Canvas):
-    def __init__(self,mere,ecran,fond="magenta",affichage_pokemon=None,ecran_principal=False):
+    def __init__(self,mere,ecran,fond="magenta",affichage_pokemon=None,ecran_principal=False,expansion=1):
         super().__init__(mere,bg=fond)
         self.image_fond_ecran=ecran
         self.mere=mere
@@ -126,7 +132,7 @@ class Fond_Ecran(tk.Canvas):
         self.bind('<Configure>', self.config_fond_ecran)
         self.affichage_pokemon=affichage_pokemon
         #attribut affichage_pokemon: On l'utilise que pour notre fenêtre top_level
-
+        self.expansion=expansion
 
     def config_fond_ecran(self,event=None,numb_pokemons=40): #valeur arbitraire (numb de pokemons par ecran)
         #On utilise pas l'argument event fournie par "bind"    
@@ -134,11 +140,13 @@ class Fond_Ecran(tk.Canvas):
         #On va ajuster le fond d'ecran selon la taille de la fenêtre
         largeur=self.winfo_width()
         hauteur=self.winfo_height()
-        print("info ecran:",largeur,hauteur)
+        # print("info ecran:",largeur,hauteur)
         
         #ratio du fond d'ecran et celui de la fenêtre:
-        ratio_image=self.image_fond_ecran.size[0]/self.image_fond_ecran.size[1]
+        ratio_image=(self.image_fond_ecran.size[0]/self.image_fond_ecran.size[1])*self.expansion
         ecran_ratio=largeur/hauteur
+  
+
 
         if ratio_image<ecran_ratio:
             x=int(largeur)
@@ -156,14 +164,13 @@ class Fond_Ecran(tk.Canvas):
                           image=self.ecran_actualisee_tk,
                           anchor="center")
         if self.affichage_pokemon is not None:
-            self.image_tk = ImageTk.PhotoImage(self.affichage_pokemon.resize((100,200)))
+            self.image_tk = ImageTk.PhotoImage(self.affichage_pokemon.resize((72,130)))
 
             # Obtenir les dimensions du Canvas
             largeur_canvas = self.winfo_width()
             hauteur_canvas = self.winfo_height()
-
             # Afficher l'image au centre du Canvas
-            self.create_image(largeur_canvas // 2, hauteur_canvas // 2, image=self.image_tk, anchor="center")
+            self.create_image(largeur_canvas*0.82, hauteur_canvas*0.85, image=self.image_tk, anchor="center")
         if self.ecran_principal:
             for filtre,scale in self.mere.filtres_avancee.stock_scale_tkinter.items():
                 scale.dessin_slider(largeur*0.4*0.352,hauteur*0.1*0.95)
@@ -195,12 +202,29 @@ class Frame_Recherche_simple(ttk.Frame):
         #Boutton pour chercher les résultats
         self.afficher_frames=True #Booleen permettant de savoir si afficher les frames des pokemons ou pas
         self.boutton_recherche=ttk.Button(mere,text="chercher!")
-        self.boutton_recherche.place(relx=0.4*self.winfo_width(),y=0)
+        self.filtre_stringvar=tk.StringVar()
+        self.box_ordre=ttk.Combobox(mere,textvariable=self.filtre_stringvar)
+        self.boutton_ordre=ttk.Button(mere,text="Ordre")
+
+        self.boutton_recherche.place(relx=0.4,relwidth=0.1,y=0,relheight=0.05)
+
 
         self.resultats=ttk.Treeview(self,columns=("Id_numero","Id_nom","Caract1","Caract2"),show="headings")  #""""Tableur tkinter"""""
 
 
         self.nom_nombre.trace("w", self.ecriture_actualisation)  #Bizare car obligé 3 arguments!
+
+      
+    def configuration_box_ordre(self,liste_filtres):
+        filtres = tuple(f"{filtre} -->" for filtre in liste_filtres) + tuple(f"{filtre} <--" for filtre in liste_filtres)
+        print(filtres)
+        self.box_ordre["values"]=filtres
+        self.box_ordre.place(relx=0.4,relwidth=0.1,rely=0.05,relheight=0.05)
+        self.boutton_ordre.place(relx=0.4,relwidth=0.095,rely=0.05,relheight=0.05)
+
+        self.box_ordre.bind("<<ComboboxSelected>>",
+                            lambda event: self.boutton_ordre.config(text=f"Ordre par: {self.filtre_stringvar.get()}"))
+        
 
     def configuration_affichage_resultats(self,filtres_affiches):
         longeur_frame=self.winfo_width()
@@ -276,9 +300,10 @@ class Frame_Recherche_simple(ttk.Frame):
             print("ok")
 
     
-    def set_command(self,command):#On reçoit la commande du boutton du Controller
-        self.boutton_recherche["command"]= lambda: command(self.entree_nm_nb.get(),
+    def set_command(self,command_boutton_recherche,command_boutton_ordre):#On reçoit la commande du boutton du Controller
+        self.boutton_recherche["command"]= lambda: command_boutton_recherche(self.entree_nm_nb.get(),
                                                            self.pack) #Initialisé à True!   
+        self.boutton_ordre["command"]=lambda: command_boutton_ordre(self.filtre_stringvar.get())
 
 
 #Frame personalisée représentant les configurations à la disposition de l'user
@@ -382,15 +407,28 @@ class Frame_dynamique_configuration(ttk.Frame):
 class Frame_dynamique_filtres(ttk.Frame):
     def __init__(self, mere, pos_initial, pos_final, pos_x, side_haut, largeur, hauteur, vitesse,teleport):
         super().__init__(mere)
-        self.dico_scales={}
-        self.stock_scale_tkinter={}
+        self.dico_echelles={} #Ici on va stocker les valeurs des filtres qu'ils ont des echelles
+        self.stock_scale_tkinter={} #Stock des widgets pour qu'il se fassent pas eliminer
+        self.bouttons_choisi=[] #Filtres selectionnées
+        self.mere=mere
+        #On divise nos filtres en plusieurs onglets
+        self.manager=ttk.Notebook(self)
+        self.manager.place(x=0,y=0,relwidth=1,relheight=1)
+        
+        
+        self.fond_ecran_categoriques=tk.Canvas(self,bg="#2992B0")
+        self.manager.add(self.fond_ecran_categoriques,text="filtres catégoriques")
+        # mere.ecrans[self.fond_ecran_categoriques]=True
 
-        self.squirtels=Image.open("View/filtres_ecran.jpeg")
-        self.squirtels_obscur=Image.open("View/fond_ecran_pokedex_obscur_mode.png")
-        self.squirtel_actuel=self.squirtels
-        self.cv=Fond_Ecran(self,self.squirtels)
-        self.cv.pack(fill="both",expand=1)
+        self.fond_ecran_bataille=tk.Canvas(self,bg="#2992B0")
+        self.manager.add(self.fond_ecran_bataille,text="Bataille")
+        # mere.ecrans[self.fond_ecran_bataille]=True
 
+        self.fond_ecran_autres=tk.Canvas(self,bg="#113B47")
+        self.manager.add(self.fond_ecran_autres,text="Autres")
+        # mere.ecrans[self.fond_ecran_autres]=True
+
+        #Ajustements pour actualiser le place du frame et simuler un deplacement
         self.start = pos_initial + 0.04
         self.end = pos_final - 0.04
         self.pos_x = pos_x
@@ -398,68 +436,108 @@ class Frame_dynamique_filtres(ttk.Frame):
         self.hauteur = hauteur
 
         self.position = pos_initial
-        self.invisible_GUI = True
+        self.invisible_GUI = True #Si il est placé "en dehors" de l'ecran
         self.Y = side_haut
         self.vitesse = vitesse
-        self.teleport=teleport
+        self.teleport=teleport #Pour afficher juste au dessus du bouton filtres
         self.place(rely=self.start, relx=self.pos_x, relheight=self.hauteur, relwidth=self.largeur)
         self.position=self.teleport[1]
 
 
-    def configuration_initiale(self,information):
-        b=0
-            # Variables para controlar la posición de los elementos
+    def configuration_initiale(self,info_type_filtre,filtre_valeurs):
+        #D'abbord les filtres categoriques
+        self.filtres_categorique_classifies={}
+        filtres_categoriques=[filtre for filtre,valeur in info_type_filtre.items() if valeur[1]=="Categorique_Type"]
+        
+        #Pour pas afficher deux fois les mêmes bouttons, on traite les valeurs de ces bouttons
+        for i, filtre in enumerate(filtres_categoriques):
+            self.filtres_categorique_classifies[filtre]=None
+            for j, autres_filtres in enumerate(filtres_categoriques):
+                #pas comparer le meme filtre
+                if i < j:
+                    test = all(elem in filtre_valeurs[autres_filtres] or elem is None for elem in filtre_valeurs[filtre])
+                    if test:
+                        self.filtres_categorique_classifies[filtre]=autres_filtres
+
+        print(self.filtres_categorique_classifies)
+
+        for filtre_categorique in self.filtres_categorique_classifies:
+            filtre = self.filtres_categorique_classifies[filtre_categorique]
+            if filtre is not None and self.filtres_categorique_classifies[filtre] == None:
+                print(filtre_categorique, "contiene", filtre)
+                valeurs_filtres=filtre_valeurs[filtre_categorique]
+                if len(valeurs_filtres)<20:
+                    for index, categorie in enumerate(valeurs_filtres):
+                        if f"{categorie}" != "nan":
+                            self.boutton_categorie = tk.Button(self.fond_ecran_categoriques,
+                                                                text=f"{categorie}",bg="red")
+                            self.boutton_categorie.configure(command=lambda cat=categorie,type_filtre=filtre_categorique,boton=self.boutton_categorie: self.presionar_boton(cat,type_filtre,boton))
+                            
+                            col = index // (len(filtre_valeurs[filtre_categorique]) // 4)
+                            fila = index % (len(filtre_valeurs[filtre_categorique]) // 4)
+                            self.boutton_categorie.place(relx=col * 0.2, rely=fila * 0.07 + 0.39)
+                        self.boutton_none = ttk.Button(self.fond_ecran_categoriques, text=f"no {filtre}",
+                                        command=lambda : self.presionar_boton(categorie,filtre_categorique))
+                        self.boutton_none.place(relx=0.8, rely=0.6)
+            
+
+
+        #Autres filtres:
+        filtres_categoriques_court=[filtre for filtre,valeur in info_type_filtre.items() if valeur[1]=="Categorique_Type_court"]
+        filtres_bataille=[filtre for filtre,valeur in info_type_filtre.items() if valeur[1]=="BatailleStat_Type"]
+        filtres_booleen=[filtre for filtre,valeur in info_type_filtre.items() if valeur[1]=="Booleen_Type"]
+        filtres_exceptions=[filtre for filtre,valeur in info_type_filtre.items() if valeur[1]=="Autre_Type"]
+
+        print(filtres_categoriques_court,filtres_booleen,filtres_exceptions)
+        
         label_rely = 0.005
-        incremento = 0.13
-        print(information[0])
-        for cle,valeur in information[0].items():
-            if not (valeur[1]=="Id_Type"):
-                if valeur[1]=="Categorique_Type":
-                    ttk.Label(self.cv,text=cle,background="red",font=("Helvetica",15)).place(relx=0.09,rely=0.05,relwidth=0.37,relheight=0.045)
-                    i=1
-                    if not information[0][cle][0]:
-                        for valeur_possible in information[1][cle]:
-                            if f"{valeur_possible}"!="nan":
-                                if i<7:
-                                    # print(i)
-                                    ttk.Button(self.cv,
-                                            text=f"{valeur_possible}").place(relx=0,rely=i*0.1)
-                                elif i<13:
-                                    a=i-6
-                                    ttk.Button(self.cv,
-                                            text=f"{valeur_possible}").place(relx=0.2,rely=a*0.1)
-                                elif i<22:
-                                    a=i-12
-                                    ttk.Button(self.cv,
-                                            text=f"{valeur_possible}").place(relx=0.4,rely=a*0.1)
+        increment = 0.09
+        num_filtros = len(filtres_bataille)
+        filtros_por_columna = 7
 
-                                i+=1
-                elif valeur[1] == "BatailleStat_Type":
-                    # Crear y colocar el label
-                    label = ttk.Label(self.cv, text=cle)
-                    label.place(relx=0.643, rely=label_rely, relwidth=0.352, relheight=0.03)
+        # Calcular el número de columnas en función del número total de filtros y filtros por columna
+        num_columnas = (num_filtros + filtros_por_columna - 1) // filtros_por_columna
 
-                    # Crear y colocar el DoubleSlider
-                    slider_rely=label_rely+0.03
-                    self.scale = DoubleSlider(self,filtre=cle)
-                    self.scale.place(relx=0.643, rely=slider_rely, relwidth=0.352, relheight=0.07)
-                    self.stock_scale_tkinter[cle]=self.scale
-                    self.dico_scales[cle]=(None,None)
+        for idx, filtre in enumerate(filtres_bataille):
+            # Calcular la posición relativa en función del índice
+            colonne_actuelle = idx % num_columnas
+            ligne_actuelle = idx // num_columnas
+            espace_entre_filtres = 0.02  # Ajuster si nécessaire
 
-                    # Incrementar la posición para el siguiente filtro
-                    label_rely += incremento
-                    slider_rely += incremento
-            self.boutton_reset=ttk.Button(self.cv,text="Reset")
-            self.boutton_reset.place(relx=0.01,rely=0.92,relwidth=0.4,relheight=0.07)
-            self.boutton_application=ttk.Button(self.cv,text="Appliquer")
-            self.boutton_application.place(relx=0.45,relwidth=0.51,rely=0.92,relheight=0.07)
-        # for cle,valeur in self.dico_scales.items():
-        #     print(cle)
-        #     print(valeur[1],valeur[2])
-                # else:
-                #     print("\n\n********",cle,information[1][cle],len(information[1][cle]),"\n\n********")
+            # Titres
+            label = ttk.Label(self.fond_ecran_bataille, text=filtre)
+            label.place(relx=0.02 + colonne_actuelle * 0.28, rely=label_rely + ligne_actuelle * (increment + espace_entre_filtres), relwidth=0.35, relheight=0.03)
+
+            # Doubles échelles
+            slider_rely = label_rely + 0.03 + ligne_actuelle * (increment + espace_entre_filtres)
+            self.echelle = DoubleSlider(self.fond_ecran_bataille, filtre=f"{filtre}", min_val=min(filtre_valeurs[filtre]), max_val=max(filtre_valeurs[filtre]), master_master=self)
+            self.echelle.place(relx=0.02 + colonne_actuelle * 0.28, rely=slider_rely, relwidth=0.35, relheight=0.07)
+            self.stock_scale_tkinter[filtre] = self.echelle
+            self.dico_echelles[filtre] = (None, None)
 
 
+
+        self.boutton_reset=ttk.Button(self.fond_ecran_categoriques,text="Reset")
+        self.boutton_reset.place(relx=0.01,rely=0.92,relwidth=0.4,relheight=0.07)
+        self.boutton_application=ttk.Button(self.fond_ecran_categoriques,text="Appliquer")
+        self.boutton_application.place(relx=0.45,relwidth=0.51,rely=0.92,relheight=0.07)
+
+      
+
+
+    def presionar_boton(self, valor,filtro,boton):
+        # Actualiza el estado del botón presionado
+        if len(self.bouttons_choisi)==0:
+            print(valor,filtro)
+            self.bouttons_choisi.append((valor,filtro))
+            boton.config(bg="yellow")
+        elif len(self.bouttons_choisi)==1:
+            filtre_secondaire=self.filtres_categorique_classifies[filtro]
+            if filtre_secondaire is not None:
+                print(valor,filtre_secondaire)
+                self.bouttons_choisi.append((valor,filtre_secondaire))
+        
+   
     def animation(self,boutton_filtres):
         if self.invisible_GUI:
             boutton_filtres["text"]="Cacher filtres"
@@ -527,6 +605,8 @@ class Frame_poke_affichage_v2(ttk.Frame):
         self.affichage_par30=True  #Pour differencié du cas lorsqu'on on cherche par filtres.
         self.nb_poke_resultats=0
 
+        self.affichage_info_complete=ttk.Button(self)
+
         self.place(relx=0.5,rely=0.05,relwidth=0.4999,relheight=0.9)
         self.canvas=tk.Canvas(self,bg="pink",scrollregion=(0,0,self.winfo_width(),self.pokemons_affiches*330))
         self.canvas.pack(fill="both",expand=1)
@@ -541,8 +621,8 @@ class Frame_poke_affichage_v2(ttk.Frame):
         self.scroll_bar=ttk.Scrollbar(self,orient="vertical",command=self.canvas.yview)
         self.canvas.configure(yscrollcommand=self.scroll_bar.set)
         self.scroll_bar.place(relx=1,rely=0,relheight=1,anchor="ne")
-        self.canvas.bind_all("<MouseWheel>",lambda event: self.canvas.yview_scroll(-int(event.delta/60),"units"))
         self.bind("<Configure>",self.configuration_affichage)
+
 
     def affichage_poke_liste(self,poke_nom_data,initialisation=False):
         # for carte in self.poke_cartes_affichees:
@@ -589,23 +669,23 @@ class Frame_poke_affichage_v2(ttk.Frame):
         if self.affichage_par30:
             if self.pokemons_affiches*330>=self.winfo_height():
                 hauteur_fenetre_scroll=self.pokemons_affiches*330
-                self.canvas.bind_all("<MouseWheel>",lambda event: self.canvas.yview_scroll(-int(event.delta/60),"units"))
+                # self.canvas.bind_all("<MouseWheel>",lambda event: self.canvas.yview_scroll(-int(event.delta/60),"units"))
                 self.scroll_bar.place(relx=1,rely=0,relheight=1,anchor="ne")
 
             else:
                 hauteur_fenetre_scroll=self.winfo_height()
-                self.canvas.unbind_all("<MouseWheel>")
+                # self.canvas.unbind_all("<MouseWheel>")
                 self.scroll_bar.place_forget()
         else:
             print("option recherche!!!")
             if self.nb_poke_resultats*330>=self.winfo_height():
                 hauteur_fenetre_scroll=self.pokemons_affiches*330
-                self.canvas.bind_all("<MouseWheel>",lambda event: self.canvas.yview_scroll(-int(event.delta/60),"units"))
+                # self.canvas.bind_all("<MouseWheel>",lambda event: self.canvas.yview_scroll(-int(event.delta/60),"units"))
                 self.scroll_bar.place(relx=1,rely=0,relheight=1,anchor="ne")
 
             else:
                 hauteur_fenetre_scroll=self.winfo_height()
-                self.canvas.unbind_all("<MouseWheel>")
+                # self.canvas.unbind_all("<MouseWheel>")
                 self.scroll_bar.place_forget()
 
 
@@ -631,6 +711,9 @@ class Frame_poke_affichage_v2(ttk.Frame):
         # Canvas para la imagen del Pokemon
         self.canvas_pokemon = tk.Canvas(self.fond_carte_pokemon, bg="#2992B0")
         self.canvas_pokemon.pack(side="right", fill="both")
+        self.canvas_pokemon.bind("<Double-Button-1>", lambda event, arg1=nom: self.on_carte_click(event,arg1))
+        self.canvas_pokemon.bind("<MouseWheel>",lambda event: self.canvas.yview_scroll(-int(event.delta/60),"units"))
+
 
 
         # Label para el nombre y número del Pokemon
@@ -675,7 +758,13 @@ class Frame_poke_affichage_v2(ttk.Frame):
     def bout_set_command(self,command):
         self.boutton_afficher_plus["command"]=lambda: command(self.affichage_par30)
 
+    def set_command_poke_affichage(self,command):
+        self.affichage_info_complete["command"]=lambda: command(event=None,pokemon_carte=self.poke_nom_affichage)
 
+    def on_carte_click(self,event,nom):
+        self.poke_nom_affichage=nom
+        print("click sur la certe de",nom)
+        self.affichage_info_complete.invoke()
 
 class Poke_Details_Window(tk.Toplevel): #On crée une autre fenêtre qui n'interfere pas notre fenêtre principale 
     def __init__(self,nom_pokemon,direction_gif,direction_image):
@@ -700,7 +789,7 @@ class Poke_Details_Window(tk.Toplevel): #On crée une autre fenêtre qui n'inter
 # View/pokemon__template_no_evolution_by_trueform_d3hs6u9.png
         self.details_ecran=Fond_Ecran(self,self.ecran,"red",affichage_pokemon=Image.open(direction_image))
         self.direction_gif=direction_gif
-        self.details_ecran.pack(fill="both",expand=1)
+        self.details_ecran.pack(fill="both",expand=True)
 
     
     def configuration_gif(self,width_rel=0.5, height_rel=0.25):
@@ -712,13 +801,14 @@ class Poke_Details_Window(tk.Toplevel): #On crée une autre fenêtre qui n'inter
         gif_hauteur = int(self.hauteur_fenetre * height_rel)
         for frame in range(gif_pokemon.n_frames):
             gif_pokemon.seek(frame)
-            frame_photo = ImageTk.PhotoImage(gif_pokemon.copy())
+            image_frame=(gif_pokemon.copy()).resize((110,150))
+            frame_photo = ImageTk.PhotoImage(image_frame)
             self.gif_frames.append(frame_photo)
         self.delai_frames_gif = gif_pokemon.info["duration"]
         self.afficher_gif(0)
 
 
-    def afficher_gif(self, compteur_frames_gif, pos_x_rel=0.25, pos_y_rel=0.49):
+    def afficher_gif(self, compteur_frames_gif, pos_x_rel=0.24, pos_y_rel=0.53):
         if self.thread_en_marche:
             frame = self.gif_frames[compteur_frames_gif]
             canvas_width = self.details_ecran.winfo_width()
@@ -759,9 +849,9 @@ class Poke_Details_Window(tk.Toplevel): #On crée une autre fenêtre qui n'inter
 
 
 class DoubleSlider(tk.Canvas):
-    def __init__(self, master=None, min_val=0, max_val=309,filtre="", **kwargs):
-        super().__init__(master, bg="#2992B0", **kwargs)
-        self.master=master
+    def __init__(self, master=None, min_val=0, max_val=100,filtre="",master_master=None):
+        super().__init__(master, bg="#2992B0")
+        self.master=master_master
         self.min_val = min_val
         self.max_val = max_val
         self.first_thumb_val = min_val  # Valor del pulgar azul
@@ -824,7 +914,7 @@ class DoubleSlider(tk.Canvas):
 
     def update_values(self):
         # Actualiza los valores en dico_scales
-        self.master.dico_scales[self.filtre] = (self.first_thumb_val, self.second_thumb_val)
-        
+        self.master.dico_echelles[self.filtre] = (self.first_thumb_val, self.second_thumb_val)
+        print(self.master.dico_echelles)        
 
 
