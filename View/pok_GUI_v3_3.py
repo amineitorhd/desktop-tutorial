@@ -487,7 +487,7 @@ class Frame_dynamique_filtres(ttk.Frame):
         filtres_bataille=[filtre for filtre,valeur in info_type_filtre.items() if valeur[1]=="BatailleStat_Type"]
         filtres_booleen=[filtre for filtre,valeur in info_type_filtre.items() if valeur[1]=="Booleen_Type"]
         filtres_exceptions=[filtre for filtre,valeur in info_type_filtre.items() if valeur[1]=="Autre_Type"]
-
+        filtres_autres=[filtres_categoriques_court,filtres_booleen,filtres_exceptions]
         print(filtres_categoriques_court,filtres_booleen,filtres_exceptions)
         
         label_rely = 0.005
@@ -515,7 +515,34 @@ class Frame_dynamique_filtres(ttk.Frame):
             self.stock_scale_tkinter[filtre] = self.echelle
             self.dico_echelles[filtre] = (None, None)
 
+        self.selections_filtres = {}
 
+        def update_etat(*args, filtre=None, valeur=None, var=None):
+            # Si la checkbox est appuyée, ajouter au dictionnaire
+            print(var)
+            if var.get() == 1:
+                if filtre in self.selections_filtres:
+                    self.selections_filtres[filtre].append(valeur)
+                else:
+                    self.selections_filtres[filtre] = [valeur]
+            # Si la checkbox n'est pas appuyée, retirer du dictionnaire
+            else:
+                self.selections_filtres[filtre].remove(valeur)
+
+        for filtres_actuels in filtres_autres:
+            for filtre in filtres_actuels:
+                cadre = ttk.Frame(self.fond_ecran_autres)
+                cadre.pack(side="top", fill="x", padx=5, pady=5)
+
+                titre = ttk.Label(cadre, text=filtre)
+                titre.pack(side="top", fill="x")
+
+                for valeur in filtre_valeurs[filtre]:
+                    var = tk.IntVar(value=None)  
+                    checkbox = ttk.Checkbutton(cadre, text=valeur, variable=var)
+                    checkbox.pack(side="top", fill="x")
+                    
+                    var.trace("w", lambda *args, filtre=filtre, valeur=valeur, var=var: update_etat(*args, filtre=filtre, valeur=valeur, var=var))
 
         self.boutton_reset=ttk.Button(self.fond_ecran_categoriques,text="Reset")
         self.boutton_reset.place(relx=0.01,rely=0.92,relwidth=0.4,relheight=0.07)

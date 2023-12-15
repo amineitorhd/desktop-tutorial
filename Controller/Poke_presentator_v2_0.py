@@ -169,6 +169,7 @@ class Control_poke:
 
         
     def chercher_data_filtre(self):  #hacer un excepcion si no hay filtros???
+        print(self.GUI_poke.filtres_avancee.selections_filtres)
         self.poke_data=self.DataBase.get_poke_data()
         filtres_selectionnes=[]
         print("Controller application des filtres....")
